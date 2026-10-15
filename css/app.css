@@ -3705,16 +3705,15 @@ img {
   .view--store {
     position: relative;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 340px;
-    grid-template-rows: auto auto 1fr auto auto;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-template-areas:
-      "banner progress"
-      "banner points"
-      "banner cta"
-      "seg seg"
-      "panes panes";
-    column-gap: 24px;
-    row-gap: 14px;
+      "banner banner banner"
+      "progress points cta"
+      "seg seg seg"
+      "panes panes panes";
+    align-items: stretch;
+    column-gap: 18px;
+    row-gap: 18px;
     max-width: 1280px;
     margin: 0 auto;
     padding: 28px var(--gutter) 0;
@@ -3738,73 +3737,88 @@ img {
   }
   .progress-card {
     grid-area: progress;
+    justify-content: center;
+    gap: 8px;
     margin: 0;
-    padding: 16px 18px;
+    padding: 16px 20px;
     border-radius: 16px;
   }
   .points-card {
     grid-area: points;
-    height: 60px;
+    height: auto;
+    min-height: 60px;
+    padding: 0 20px;
     border-radius: 16px;
+  }
+  .points-card__value {
+    font-size: 28px;
   }
   .points-card:hover {
     box-shadow: 0 0 0 1px var(--accent-bg), var(--shadow-sm);
   }
   .side-cta {
     grid-area: cta;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 18px;
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    grid-template-areas:
+      "boxes eyebrow"
+      "boxes title"
+      "boxes btn";
+    align-items: center;
+    column-gap: 14px;
+    row-gap: 4px;
+    padding: 14px 18px 14px 10px;
     border-radius: 16px;
     background: var(--surface);
     box-shadow: var(--shadow-sm);
   }
   .side-cta__boxes {
+    grid-area: boxes;
     display: flex;
     justify-content: center;
-    margin-bottom: 6px;
+    align-items: center;
   }
   .side-cta__boxes img {
-    width: 92px;
-    height: 92px;
+    width: 50px;
+    height: 50px;
     object-fit: contain;
   }
   .side-cta__boxes img:nth-child(1) {
     rotate: -8deg;
-    translate: 14px 6px;
+    translate: 12px 4px;
   }
   .side-cta__boxes img:nth-child(2) {
     position: relative;
     z-index: 1;
-    width: 108px;
-    height: 108px;
+    width: 62px;
+    height: 62px;
   }
   .side-cta__boxes img:nth-child(3) {
     rotate: 8deg;
-    translate: -14px 8px;
+    translate: -12px 5px;
   }
   .side-cta__eyebrow {
+    grid-area: eyebrow;
     margin: 0;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 1.4px;
     text-transform: uppercase;
     color: var(--accent);
   }
   .side-cta__title {
+    grid-area: title;
     margin: 0;
-    font-size: 20px;
+    font-size: 17px;
     font-weight: 700;
   }
   .side-cta__text {
-    margin: 0 0 10px;
-    font-size: 13px;
-    line-height: 1.45;
-    color: var(--text-2);
+    display: none;
   }
   .side-cta .btn {
-    margin-top: auto;
+    grid-area: btn;
+    height: 40px;
+    margin-top: 6px;
   }
   .side-cta .btn:disabled {
     opacity: 0.6;
@@ -3969,5 +3983,14 @@ img {
   }
   .hero__banner img {
     transform: none !important;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .points-card__earn {
+    display: none;
+  }
+  .points-card__chev {
+    margin-left: auto;
   }
 }
