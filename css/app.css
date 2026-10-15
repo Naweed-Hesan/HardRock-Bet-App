@@ -1720,7 +1720,7 @@ img {
 /* Drop rarity reveal */
 .drop.is-revealing .drop__rays {
   background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--rc) 35%, transparent) 0deg 8deg, transparent 8deg 20deg);
-  animation-duration: 8s;
+  animation-duration: 16s;
 }
 .drop.is-revealing {
   transition: background 0.6s;
