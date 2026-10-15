@@ -1295,7 +1295,7 @@ function insideHTML(p) {
   const tiers = order.filter((r) => odds[r]);
   return `<section class="inside" style="--i:4">
     <h3>What's inside</h3>
-    <p class="inside__lead">One signed ${box.noun}, revealed when you open the box. Odds at ${LEVEL_NAMES[state.level]}:</p>
+    <p class="inside__lead">One ${box.noun}, revealed when you open the box. Odds at ${LEVEL_NAMES[state.level]}:</p>
     <div class="inside__odds">${tiers
       .map((r) => `<span style="--rc:${RARITY[r].color};--w:${(odds[r] / total) * 100}%"><i></i>${RARITY[r].label} <b>${Math.round((odds[r] / total) * 100)}%</b></span>`)
       .join("")}</div>
