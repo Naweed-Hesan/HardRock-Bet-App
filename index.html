@@ -26,11 +26,19 @@
     <div id="app">
       <header class="topbar" id="topbar">
         <div class="topbar__inner">
+          <a class="brand" href="#/" aria-label="Hard Rock Bet Rewards home">
+            <span class="brand__mark"><img src="assets/icons/featured-hand.png" alt="" /></span>
+            <span class="brand__word">Hard Rock Bet</span>
+          </a>
+          <nav class="topnav" id="topnav" aria-label="Main"></nav>
           <div class="topbar__title" aria-hidden="true">
             <span>Rewards</span>
             <span class="topbar__points" data-points-pill></span>
           </div>
-          <button class="icon-btn icon-btn--light" id="info-btn" aria-label="How Reward Drops work"></button>
+          <div class="topbar__actions">
+            <button class="balance" id="balance-btn" aria-label="Account"><span data-balance-icon></span>$0.00</button>
+            <button class="icon-btn icon-btn--light" id="info-btn" aria-label="How Reward Drops work"></button>
+          </div>
         </div>
       </header>
 
@@ -49,6 +57,17 @@
                 <span class="hex" data-hex-next>2</span>
               </div>
               <p class="progress-card__note">Credits reset monthly</p>
+            </div>
+            <div class="side-cta" id="side-cta">
+              <div class="side-cta__boxes">
+                <img src="assets/img/box-full-size.webp" alt="" />
+                <img src="assets/img/box-jersey.webp" alt="" />
+                <img src="assets/img/box-mini.webp" alt="" />
+              </div>
+              <p class="side-cta__eyebrow" data-level-name>Level 1 Drop</p>
+              <h3 class="side-cta__title">Open a Lucky You box</h3>
+              <p class="side-cta__text">Every drop is a signed helmet or jersey. Rarer pulls earn more bonus points.</p>
+              <button class="btn btn--primary btn--block" id="side-open">Open drop</button>
             </div>
           </div>
         </section>

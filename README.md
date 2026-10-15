@@ -6,7 +6,9 @@ A clickable, mobile-first prototype of the Hard Rock Bet Rewards store featuring
 
 ## What you can try
 
-- **Reward Drops (repeatable)** – tap the Legendary Reward Drops banner, tap the box three times and watch the rarity reveal: Common, Rare, Epic or Legendary, each with its own beam, colors and confetti. Points fly into your balance; boxes and boosts fly into My Rewards. Each drop adds credits, and a full bar triggers a Level Up that improves your odds, up to Signature.
+- **Reward Drops (repeatable)** – every drop is a Lucky You box (Full Size Helmet, Mini Helmet or Football Jersey Pack). Tap it three times to break it open and the signed helmet or jersey inside rises out, with a Common, Rare, Epic or Legendary beam and confetti. The item flies into My Rewards and bonus Unity Points fly into your balance. Each drop adds credits, and a full bar triggers a Level Up that improves your odds, up to Signature.
+- **Redeeming a box opens it** – redeem a Lucky You box in the store and you open it on the spot to see which helmet or jersey you got. Box product pages list what's inside with the odds for your level.
+- **Desktop layout** – on screens 1024px and wider: top navigation, the banner beside a level/points/drop panel, a two-column My Rewards, a split product page and centered dialogs.
 - **Daily Scratch** – in My Rewards, scratch the foil with your finger, collect the prize and get a fresh card.
 - **Hold to redeem** – once you have enough points, press and hold the redeem button on a product page. Redeemed items show up in My Rewards with an order number.
 - **Store** – filter by category, open any product with a shared-element transition, tap the photo for a full-screen viewer (double-tap to zoom, swipe down to close), swipe from the left edge to go back.

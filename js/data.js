@@ -98,29 +98,43 @@ export const RARITY = {
   legendary: { label: "Legendary", color: "#ffc233", deep: "#c47a00", confetti: ["#fff7d6", "#ffe08a", "#ffc233", "#ff9d00", "#ffffff"] },
 };
 
-export const DROP_TABLE = {
-  common: [
-    { kind: "points", amount: 250 },
-    { kind: "points", amount: 500 },
-    { kind: "spins", amount: 10, title: "10 Bonus Spins", sub: "Valid on featured slots" },
-  ],
-  rare: [
-    { kind: "points", amount: 1000 },
-    { kind: "boost", title: "10% Profit Boost", sub: "Use on a 3+ leg parlay" },
-    { kind: "spins", amount: 25, title: "25 Bonus Spins", sub: "Valid on featured slots" },
-  ],
-  epic: [
-    { kind: "points", amount: 2500 },
-    { kind: "product", productId: "hot-hands" },
-    { kind: "product", productId: "lucky-you-mini-helmet-box" },
-    { kind: "boost", title: "25% Profit Boost", sub: "Use on any parlay" },
-  ],
-  legendary: [
-    { kind: "points", amount: 10000 },
-    { kind: "product", productId: "lucky-you-full-size-helmet-box" },
-    { kind: "product", productId: "lucky-you-football-jersey-pack" },
-  ],
+/* What each Lucky You box can contain. Items reuse the store photos; rarity is set per item. */
+const HELMETS = [
+  { productId: "ladainian-tomlinson-signed-helmet", player: "LaDainian Tomlinson", rarity: "rare" },
+  { productId: "drew-brees-signed-helmet", player: "Drew Brees", rarity: "rare" },
+  { productId: "brock-purdy-signed-helmet", player: "Brock Purdy", rarity: "rare" },
+  { productId: "patrick-mahomes-signed-helmet", player: "Patrick Mahomes", rarity: "epic" },
+  { productId: "swarovski-crystal-chargers-helmet", player: "Swarovski Crystal", rarity: "legendary" },
+  { productId: "swarovski-crystal-bengals-helmet", player: "Swarovski Crystal", rarity: "legendary" },
+];
+const DOWNGRADE = { rare: "common", epic: "rare", legendary: "epic" };
+
+export const BOXES = {
+  "lucky-you-full-size-helmet-box": {
+    short: "Full Size Helmet Box",
+    noun: "helmet",
+    weight: 40,
+    pool: HELMETS.map((h) => ({ ...h })),
+  },
+  "lucky-you-mini-helmet-box": {
+    short: "Mini Helmet Box",
+    noun: "mini helmet",
+    weight: 35,
+    pool: HELMETS.map((h) => ({ ...h, rarity: DOWNGRADE[h.rarity], name: `${h.player} Signed Mini Helmet` })),
+  },
+  "lucky-you-football-jersey-pack": {
+    short: "Football Jersey Pack",
+    noun: "jersey",
+    weight: 25,
+    pool: [
+      { productId: "erling-haaland-signed-manchester-city-jersey", rarity: "rare" },
+      { productId: "cristiano-ronaldo-signed-real-madrid-jersey", rarity: "epic" },
+      { productId: "lionel-messi-signed-inter-miami-jersey", rarity: "legendary" },
+    ],
+  },
 };
+
+export const BONUS_POINTS = { common: 100, rare: 250, epic: 750, legendary: 2000 };
 
 /* Base odds for Level 1. Each level above 1 moves weight from Common to the higher tiers. */
 export function rarityOdds(level) {

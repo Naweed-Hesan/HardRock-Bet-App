@@ -1,4 +1,4 @@
-import { PRODUCTS, CATEGORIES, RARITY, DROP_TABLE, rarityOdds, SCRATCH_PRIZES, LEVEL_NAMES, MAX_LEVEL } from "./data.js";
+import { PRODUCTS, CATEGORIES, RARITY, BOXES, BONUS_POINTS, rarityOdds, SCRATCH_PRIZES, LEVEL_NAMES, MAX_LEVEL } from "./data.js";
 import { ICONS, icon } from "./icons.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -203,7 +203,16 @@ function syncCta() {
     ? `<span class="hero__cta-ring"></span>Recharging your next drop…`
     : `<span class="hero__cta-dot"></span>${LEVEL_NAMES[state.level]} Drop ready · Tap to open`;
   cta.classList.toggle("is-charging", charging);
+  $("[data-level-name]").textContent = `${LEVEL_NAMES[state.level]} Drop`;
+  const sideBtn = $("#side-open");
+  sideBtn.disabled = charging;
+  sideBtn.textContent = charging ? "Recharging…" : "Open drop";
 }
+$("#side-open").addEventListener("click", () => {
+  if (charging) return;
+  buzz();
+  openDrop();
+});
 async function recharge() {
   charging = true;
   cta.classList.add("is-gone");
@@ -330,7 +339,9 @@ function rewardTile(r) {
 }
 function readyHTML(r, i) {
   const active = state.active[r.id];
-  return `<article class="reward reward--ready ${r.fresh ? "is-new" : ""} ${active ? "is-active" : ""}" data-reward="${r.id}" style="--i:${i}">
+  const isItem = r.kind === "item";
+  const done = isItem ? "Claimed" : "Active";
+  return `<article class="reward reward--ready ${r.fresh ? "is-new" : ""} ${active ? "is-active" : ""}" data-reward="${r.id}" data-done="${done}" style="--i:${i}">
     <button class="reward__main" aria-expanded="false">
       ${rewardTile(r)}
       <div class="reward__body"><h5>${r.title}</h5><p>${r.sub}</p>${r.exp ? `<small>${r.exp}</small>` : ""}</div>
@@ -338,9 +349,9 @@ function readyHTML(r, i) {
     </button>
     <div class="reward__more"><div>
       <p>${r.detail || "Tap Use now to apply this reward to your account."}</p>
-      <button class="btn btn--primary btn--small" data-activate>${active ? "Active" : "Use now"}</button>
+      <button class="btn btn--primary btn--small" data-activate>${active ? done : isItem ? "Claim" : "Use now"}</button>
     </div></div>
-    <span class="stamp">Active</span>
+    <span class="stamp">${done}</span>
   </article>`;
 }
 function progressHTML(r, i, extra = "") {
@@ -366,7 +377,7 @@ function renderRewards() {
         </button>
         <button class="promo promo--drops" data-promo="drops">
           <div class="promo__art"><h4>Legendary<br/>Reward Drops</h4><small>Level ${state.level === MAX_LEVEL ? "Signature" : state.level} · ${state.drops} opened</small><span class="promo__big">${icon("gift")}</span></div>
-          <div class="promo__foot"><b>Open a drop, win big</b><span>Every drop rolls Common, Rare, Epic or Legendary rewards.</span><span class="promo__optin">OPEN A DROP ${icon("chevron-right")}</span></div>
+          <div class="promo__foot"><b>Open a Lucky You box</b><span>Every drop reveals a signed helmet or jersey, from Common to Legendary.</span><span class="promo__optin">OPEN A DROP ${icon("chevron-right")}</span></div>
         </button>
       </div>
       <div class="dots" id="promo-dots">${[0, 1, 2].map((i) => `<span class="${i === 0 ? "on" : ""}"></span>`).join("")}</div>
@@ -389,7 +400,12 @@ function renderRewards() {
       <div class="redeemed">${state.redeemed
         .map((o, i) => {
           const p = productById(o.productId);
-          return p ? `<button class="redeemed__item" data-open="${p.id}" style="--i:${i}"><span class="redeemed__img"><img src="${p.img}" alt="" /></span><b>${p.name}</b><small>${o.order} · Processing</small></button>` : "";
+          if (!p) return "";
+          const it = o.item;
+          const rc = it ? `style="--i:${i};--rc:${RARITY[it.rarity].color}"` : `style="--i:${i}"`;
+          return `<button class="redeemed__item ${it ? "has-item" : ""}" data-open="${it ? it.productId : p.id}" ${rc}>
+            <span class="redeemed__img"><img src="${it ? it.img : p.img}" alt="" />${it ? `<span class="redeemed__box"><img src="${p.img}" alt="" /></span>` : ""}</span>
+            <b>${it ? it.name : p.name}</b><small>${it ? `${RARITY[it.rarity].label} · ` : ""}${o.order} · Processing</small></button>`;
         })
         .join("")}</div>
     </section>`
@@ -424,8 +440,8 @@ rewardsPane.addEventListener("click", (e) => {
     state.active[id] = true;
     save();
     card.classList.add("is-active", "is-stamping");
-    activate.textContent = "Active";
-    toast("Reward activated", "check");
+    activate.textContent = card.dataset.done;
+    toast(card.dataset.done === "Claimed" ? "Claimed! We'll email your shipping details." : "Reward activated", "check");
   } else if (main) {
     buzz();
     const card = main.closest(".reward");
@@ -620,19 +636,32 @@ tabbar.innerHTML =
   TABS.map(
     (t) => `<button data-tab="${t.id}" ${t.id === "rewards" ? 'aria-current="page"' : ""}><span class="${t.dot ? "tabbar__dot" : ""}">${icon(t.icon)}</span>${t.label}</button>`
   ).join("");
-tabbar.addEventListener("click", (e) => {
-  const b = e.target.closest("button");
-  if (!b) return;
+function onNav(id) {
   buzz();
-  if (b.dataset.tab === "rewards") {
+  if (id === "rewards") {
+    if (!detail.hidden) goBack();
     scrollTo({ top: 0, behavior: reducedMotion.matches ? "auto" : "smooth" });
     return;
   }
-  const i = TABS.findIndex((t) => t.id === b.dataset.tab);
+  const i = TABS.findIndex((t) => t.id === id);
   tabbar.style.setProperty("--tab-i", i);
   setTimeout(() => tabbar.style.setProperty("--tab-i", 2), 650);
-  toast(`${TABS[i].label === "$0.00" ? "Account" : TABS[i].label} isn't part of this prototype`, "lock");
+  toast(`${id === "account" ? "Account" : TABS[i].label} isn't part of this prototype`, "lock");
+}
+tabbar.addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (b) onNav(b.dataset.tab);
 });
+const topnav = $("#topnav");
+topnav.innerHTML = TABS.filter((t) => t.id !== "account")
+  .map((t) => `<button data-tab="${t.id}" ${t.id === "rewards" ? 'aria-current="page"' : ""}>${icon(t.icon)}<span>${t.label}</span></button>`)
+  .join("");
+topnav.addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (b) onNav(b.dataset.tab);
+});
+$("[data-balance-icon]").innerHTML = icon("circle-user-round");
+$("#balance-btn").addEventListener("click", () => onNav("account"));
 
 /* ---------- Bottom sheet ---------- */
 const sheet = $("#sheet");
@@ -699,12 +728,12 @@ $("#info-btn").addEventListener("click", () => {
     .map(([r, w]) => `<span class="odds__row"><i style="--rc:${RARITY[r].color}"></i>${RARITY[r].label}<b>${Math.round(w)}%</b></span>`)
     .join("");
   openSheet(`<h2>How Reward Drops work</h2>
-    <p class="lead">Every drop you open earns credits. Fill the bar to level up and improve your odds.</p>
+    <p class="lead">Every drop is a Lucky You box with a signed helmet or jersey inside. Opening drops earns credits toward your next level.</p>
     ${steps([
-      ["trophy", "Earn credits", `Each drop adds ${CREDITS_PER_DROP} credits to your bar.`],
-      ["gift", "Open drops", "Tap the banner, then tap the box three times."],
-      ["sparkles", "Roll a rarity", "Common, Rare, Epic or Legendary. Higher tiers include Lucky You boxes."],
-      ["zap", "Level up", "Reach 10 credits to level up, all the way to Signature."],
+      ["gift", "Open a box", "Tap the banner, then tap the box three times to break it open."],
+      ["sparkles", "Reveal the pull", "Each helmet and jersey has a rarity, from Common to Legendary."],
+      ["unity", "Earn bonus points", `Rarer pulls pay more: up to ${fmt(BONUS_POINTS.legendary)} bonus Unity Points.`],
+      ["trophy", "Level up", `Each drop adds ${CREDITS_PER_DROP} credits. Reach 10 to level up, all the way to Signature.`],
     ])}
     <div class="odds"><h3>Your odds at ${LEVEL_NAMES[state.level]}</h3>${odds}</div>
     <button class="btn btn--primary btn--block" data-close>Got it</button>
@@ -728,7 +757,7 @@ $("#points-card").addEventListener("click", () => {
     ${steps([
       ["receipt-text", "Bet online", "Earn points on every settled cash wager."],
       ["gamepad-2", "Play casino games", "Slots and table games earn points too."],
-      ["gift", "Open Reward Drops", "Drops can include thousands of bonus points."],
+      ["gift", "Open Reward Drops", "Every pull from a drop pays bonus points."],
       ["unity", "Redeem in the Store", "Spend points on anything in the Rewards Store."],
     ])}
     <button class="btn btn--primary btn--block" data-close>Start earning</button>`);
@@ -745,45 +774,48 @@ banner.addEventListener("click", () => {
   openDrop();
 });
 
-function rollPrize(level) {
-  const odds = rarityOdds(level);
-  const total = odds.reduce((s, [, w]) => s + w, 0);
+function weighted(entries) {
+  const total = entries.reduce((s, [, w]) => s + w, 0);
   let roll = Math.random() * total;
-  let rarity = "common";
-  for (const [r, w] of odds) {
-    if ((roll -= w) <= 0) {
-      rarity = r;
-      break;
-    }
-  }
-  const entry = pick(DROP_TABLE[rarity]);
-  if (entry.kind === "product") {
-    const p = productById(entry.productId);
-    return { ...entry, rarity, title: p.name, sub: "Added to your Ready to Use rewards", img: p.img };
-  }
-  if (entry.kind === "points") return { ...entry, rarity, title: `+${fmt(entry.amount)} Unity Points`, sub: "Added to your balance" };
-  return { ...entry, rarity };
+  for (const [key, w] of entries) if ((roll -= w) <= 0) return key;
+  return entries[entries.length - 1][0];
+}
+const pickBox = () => weighted(Object.entries(BOXES).map(([id, b]) => [id, b.weight]));
+
+function boxOdds(boxId, level) {
+  const present = new Set(BOXES[boxId].pool.map((i) => i.rarity));
+  return rarityOdds(level).filter(([r]) => present.has(r));
+}
+function rollItem(boxId, level) {
+  const rarity = weighted(boxOdds(boxId, level));
+  const entry = pick(BOXES[boxId].pool.filter((i) => i.rarity === rarity));
+  const p = productById(entry.productId);
+  return { productId: p.id, name: entry.name || p.name, img: p.img, rarity, boxId };
 }
 
-function openDrop() {
+let dropCtx = null;
+function openDrop({ boxId = pickBox(), source = "drop", order = null } = {}) {
   if (!drop.hidden) return;
+  dropCtx = { boxId, source, order };
+  const boxProduct = productById(boxId);
   let hits = 0;
   drop.hidden = false;
-  drop.classList.remove("is-leaving");
+  drop.className = "drop";
   drop.style.removeProperty("--rc");
   document.body.classList.add("is-locked");
   drop.innerHTML = `
     <div class="drop__rays"></div>
-    <button class="icon-btn icon-btn--light drop__close" aria-label="Close">${icon("x")}</button>
-    <div class="drop__eyebrow">${LEVEL_NAMES[state.level]} Drop</div>
-    <h2 class="drop__title">Legendary<br/>Reward Drop</h2>
-    <div class="drop__stage"><img class="drop__box" src="assets/img/box-full-size.webp" alt="Lucky You drop box" /></div>
+    ${source === "drop" ? `<button class="icon-btn icon-btn--light drop__close" aria-label="Close">${icon("x")}</button>` : ""}
+    <div class="drop__eyebrow">${source === "redeem" ? `Order ${order}` : `${LEVEL_NAMES[state.level]} Drop`}</div>
+    <h2 class="drop__title">${source === "redeem" ? "Open your<br/>Lucky You box" : "Legendary<br/>Reward Drop"}</h2>
+    <div class="drop__stage"><img class="drop__box" src="${boxProduct.img}" alt="${boxProduct.name}" /></div>
+    <p class="drop__boxname">${boxProduct.name}</p>
     <p class="drop__hint">Tap the box to open it</p>
     <div class="drop__taps"><span></span><span></span><span></span></div>
     <div class="drop__flash"></div>`;
   const box = $(".drop__box", drop);
   const dots = $$(".drop__taps span", drop);
-  $(".drop__close", drop).addEventListener("click", () => closeDrop());
+  $(".drop__close", drop)?.addEventListener("click", () => closeDrop());
   box.addEventListener("click", () => {
     if (hits >= 3) return;
     hits++;
@@ -801,78 +833,89 @@ function openDrop() {
 }
 
 async function revealPrize(box) {
-  const prize = rollPrize(state.level);
-  const R = RARITY[prize.rarity];
-  const big = prize.rarity === "legendary" || prize.rarity === "epic";
+  const { boxId, source } = dropCtx;
+  const item = rollItem(boxId, state.level);
+  const bonus = source === "drop" ? BONUS_POINTS[item.rarity] : 0;
+  const R = RARITY[item.rarity];
+  const big = item.rarity === "legendary" || item.rarity === "epic";
   buzz(big ? [40, 50, 40, 50, 120] : [30, 40, 60]);
   drop.style.setProperty("--rc", R.color);
   drop.style.setProperty("--rd", R.deep);
   box.classList.add("burst");
   $(".drop__flash", drop).classList.add("go");
-  $(".drop__hint", drop).style.opacity = 0;
-  $(".drop__taps", drop).style.opacity = 0;
-  drop.classList.add("is-revealing", `is-${prize.rarity}`);
+  ["hint", "taps", "boxname"].forEach((k) => ($(`.drop__${k}`, drop).style.opacity = 0));
+  drop.classList.add("is-revealing", `is-${item.rarity}`);
   const stage = $(".drop__stage", drop);
   await wait(380);
-  stage.insertAdjacentHTML("beforeend", `<div class="drop__beam"></div><div class="drop__rarity">${R.label}</div>`);
+  stage.insertAdjacentHTML(
+    "beforeend",
+    `<div class="drop__beam"></div><div class="drop__rarity">${R.label}</div><img class="drop__rise" src="${item.img}" alt="" />`
+  );
   confetti({ colors: R.confetti, count: big ? 240 : 140, power: big ? 1.25 : 1 });
-  await wait(prize.rarity === "legendary" ? 1250 : 900);
-  const tile = prize.img
-    ? `<div class="prize__tile prize__tile--img"><img src="${prize.img}" alt="" /></div>`
-    : `<div class="prize__tile">${icon(prize.kind === "points" ? "unity" : prize.kind === "boost" ? "zap" : "sparkles")}</div>`;
+  await wait(item.rarity === "legendary" ? 1500 : 1150);
   stage.innerHTML = `<div class="drop__reveal"><div class="prize">
       <span class="prize__rarity">${R.label}</span>
-      ${tile}
-      <small>You unlocked</small>
-      <h3>${prize.title}</h3>
-      <p>${prize.sub}</p>
-      <button class="btn btn--primary btn--block" id="collect">Collect</button>
+      <div class="prize__tile prize__tile--img prize__tile--hero"><img src="${item.img}" alt="" /></div>
+      <small>You pulled a ${BOXES[boxId].noun}</small>
+      <h3>${item.name}</h3>
+      <p>${bonus ? `${icon("unity")} +${fmt(bonus)} bonus Unity Points` : "It ships to the address on your account."}</p>
+      <button class="btn btn--primary btn--block" id="collect">${source === "redeem" ? "Add to my collection" : "Collect"}</button>
     </div></div>`;
-  $(".drop__title", drop).innerHTML = prize.rarity === "legendary" ? "Legendary!" : prize.rarity === "epic" ? "Epic pull!" : "Nice pull!";
-  $("#collect").addEventListener("click", (e) => collect(prize, e.currentTarget), { once: true });
+  $(".drop__title", drop).innerHTML = item.rarity === "legendary" ? "Legendary!" : item.rarity === "epic" ? "Epic pull!" : "Nice pull!";
+  $("#collect").addEventListener("click", (e) => collect(item, bonus, e.currentTarget), { once: true });
 }
 
-async function collect(prize, btn) {
+async function collect(item, bonus, btn) {
+  const { source, order, boxId } = dropCtx;
+  const R = RARITY[item.rarity];
   buzz(12);
   btn.disabled = true;
-  state.drops++;
   const tileRect = $(".prize__tile", drop).getBoundingClientRect();
+
+  if (source === "redeem") {
+    const entry = state.redeemed.find((o) => o.order === order);
+    if (entry) entry.item = { productId: item.productId, name: item.name, img: item.img, rarity: item.rarity };
+    save();
+    closeDrop({ keepLock: true });
+    await wait(300);
+    successSheet(productById(boxId), order, item);
+    return;
+  }
+
+  state.drops++;
   const leveledUp = state.progress + CREDITS_PER_DROP >= 10 && state.level < MAX_LEVEL;
   state.progress = leveledUp ? 10 : Math.min(10, state.progress + CREDITS_PER_DROP);
-  if (prize.kind !== "points") {
-    state.rewards.unshift({
-      id: `drop-${Date.now()}`,
-      title: prize.title,
-      sub: prize.kind === "product" ? "Won from a Reward Drop. Ready to claim." : prize.sub,
-      exp: `${RARITY[prize.rarity].label} · ${LEVEL_NAMES[state.level]} Drop`,
-      icon: prize.kind === "boost" ? "zap" : "sparkles",
-      tile: `linear-gradient(180deg,${RARITY[prize.rarity].color},${RARITY[prize.rarity].deep})`,
-      img: prize.img,
-      rarity: prize.rarity,
-      fresh: true,
-      detail: prize.kind === "product" ? "Claim this box and we'll ship it to the address on your account." : "Applies automatically to your next qualifying bet.",
-    });
-  }
+  state.rewards.unshift({
+    id: `drop-${Date.now()}`,
+    kind: "item",
+    productId: item.productId,
+    title: item.name,
+    sub: `Pulled from a Lucky You ${BOXES[boxId].short}`,
+    exp: `${R.label} · ${LEVEL_NAMES[state.level]} Drop`,
+    img: item.img,
+    rarity: item.rarity,
+    fresh: true,
+    detail: "Claim it and we'll ship it to the address on your account, authenticated and ready to display.",
+  });
   save();
   closeDrop({ keepLock: true });
   await wait(120);
-  if (prize.kind === "points") {
-    await flyPoints(tileRect, prize.amount);
-  } else {
-    const tab = $('[data-tab="rewards"]', segmented);
-    await fly(tileRect, tab, {
+  const tab = $('[data-tab="rewards"]', segmented);
+  await Promise.all([
+    fly(tileRect, tab, {
       count: 1,
-      size: 64,
+      size: 72,
       spread: 0,
-      html: prize.img ? `<img class="flyer__img" src="${prize.img}" alt="" />` : `<span class="flyer__chip" style="--rc:${RARITY[prize.rarity].color}">${icon(prize.kind === "boost" ? "zap" : "sparkles")}</span>`,
+      html: `<img class="flyer__img" src="${item.img}" alt="" style="box-shadow:0 0 0 3px ${R.color},0 10px 30px rgba(0,0,0,.35)" />`,
       onLand: () => {
         bump(tab);
         if (activePane !== "rewards") tab.classList.add("has-new");
       },
-    });
-    toast("Added to My Rewards", "gift");
-    if (activePane === "rewards" && !$(`[data-reward="${state.rewards[0].id}"]`)) renderRewards();
-  }
+    }),
+    wait(250).then(() => flyPoints(tileRect, bonus)),
+  ]);
+  toast(`${item.name} added to My Rewards`, "gift", 2800);
+  if (activePane === "rewards" && !$(`[data-reward="${state.rewards[0].id}"]`)) renderRewards();
   renderProgress();
   if (leveledUp) {
     await wait(1000);
@@ -992,6 +1035,33 @@ function redeemButtonHTML(p) {
   </button>`;
 }
 
+function insideHTML(p) {
+  const box = BOXES[p.id];
+  if (!box) return "";
+  const odds = Object.fromEntries(boxOdds(p.id, state.level));
+  const total = Object.values(odds).reduce((s, w) => s + w, 0);
+  const order = ["legendary", "epic", "rare", "common"];
+  const items = [...box.pool].sort((a, b) => order.indexOf(a.rarity) - order.indexOf(b.rarity));
+  const tiers = order.filter((r) => odds[r]);
+  return `<section class="inside" style="--i:4">
+    <h3>What's inside</h3>
+    <p class="inside__lead">One signed ${box.noun}, revealed when you open the box. Odds at ${LEVEL_NAMES[state.level]}:</p>
+    <div class="inside__odds">${tiers
+      .map((r) => `<span style="--rc:${RARITY[r].color};--w:${(odds[r] / total) * 100}%"><i></i>${RARITY[r].label} <b>${Math.round((odds[r] / total) * 100)}%</b></span>`)
+      .join("")}</div>
+    <div class="inside__row">${items
+      .map((it, i) => {
+        const ip = productById(it.productId);
+        return `<button class="inside__item" data-inside="${ip.id}" style="--rc:${RARITY[it.rarity].color};--i:${i}">
+          <span class="inside__img"><img src="${ip.img}" alt="" loading="lazy" /></span>
+          <small>${RARITY[it.rarity].label}</small>
+          <b>${it.name || ip.name}</b>
+        </button>`;
+      })
+      .join("")}</div>
+  </section>`;
+}
+
 function detailHTML(p) {
   const related = PRODUCTS.filter((x) => x.id !== p.id && x.type === p.type)
     .concat(PRODUCTS.filter((x) => x.type !== p.type && x.type === "box"))
@@ -1002,18 +1072,23 @@ function detailHTML(p) {
       <h2>Unity Points: ${fmt(state.points)}</h2>
       <button class="icon-btn icon-btn--dark" data-share aria-label="Share">${icon("share-2")}</button>
     </div></header>
-    <div class="detail__media"><button class="detail__media-inner" data-zoom aria-label="View full screen"><img class="${p.type === "box" ? "is-box" : ""}" src="${p.img}" alt="${p.name}" /><span class="zoom-hint">${icon("sparkles")}Tap to zoom</span></button></div>
-    <div class="detail__body">
-      <h1 class="detail__title" style="--i:0">${p.name}</h1>
-      <div class="detail__tags" style="--i:1"><span class="tag">${TYPE_LABEL[p.type]}</span>${p.badge && p.badge !== "Mystery" ? `<span class="tag">${p.badge === "1/1" ? "One of One" : p.badge}</span>` : ""}<span class="tag">Authenticated</span></div>
-      <section style="--i:2"><h3>Description</h3><p class="detail__desc">${p.description}</p></section>
-      <section style="--i:3"><h3>Terms</h3><ul class="detail__terms">${p.terms.map((t) => `<li>${t}</li>`).join("")}</ul></section>
-      <section class="related" style="--i:4"><h3>You may also like</h3><div class="related__row">${related.map(cardHTML).join("")}</div></section>
-    </div>
-    <div class="buybar"><div class="buybar__inner">
-      <div class="buybar__row"><span>Cost</span><span class="price">${icon("unity")}<span>${fmt(p.price)}</span></span></div>
-      <div class="buybar__cta">${redeemButtonHTML(p)}</div>
-    </div></div>`;
+    <div class="detail__layout">
+      <div class="detail__media"><button class="detail__media-inner" data-zoom aria-label="View full screen"><img class="${p.type === "box" ? "is-box" : ""}" src="${p.img}" alt="${p.name}" /><span class="zoom-hint">${icon("sparkles")}Tap to zoom</span></button></div>
+      <div class="detail__main">
+        <div class="detail__body">
+          <h1 class="detail__title" style="--i:0">${p.name}</h1>
+          <div class="detail__tags" style="--i:1"><span class="tag">${TYPE_LABEL[p.type]}</span>${p.badge && p.badge !== "Mystery" ? `<span class="tag">${p.badge === "1/1" ? "One of One" : p.badge}</span>` : ""}<span class="tag">Authenticated</span></div>
+          <section style="--i:2"><h3>Description</h3><p class="detail__desc">${p.description}</p></section>
+          ${insideHTML(p)}
+          <section style="--i:3"><h3>Terms</h3><ul class="detail__terms">${p.terms.map((t) => `<li>${t}</li>`).join("")}</ul></section>
+          <section class="related" style="--i:5"><h3>You may also like</h3><div class="related__row">${related.map(cardHTML).join("")}</div></section>
+        </div>
+        <div class="buybar"><div class="buybar__inner">
+          <div class="buybar__row"><span>Cost</span><span class="price">${icon("unity")}<span>${fmt(p.price)}</span></span></div>
+          <div class="buybar__cta">${redeemButtonHTML(p)}</div>
+        </div></div>
+      </div>
+    </div>`;
 }
 
 function morph(update) {
@@ -1148,35 +1223,39 @@ function redeem(btn) {
   $(".hold__label", btn).innerHTML = `${icon("check")} Redeemed`;
   const r = btn.getBoundingClientRect();
   confetti({ x: r.left + r.width / 2, y: r.top, count: 180, power: 1.1 });
-  setTimeout(() => {
-    openSheet(
-      `<div class="success">
-        <svg class="success__check" viewBox="0 0 52 52"><circle cx="26" cy="26" r="24" /><path d="M15 27l7 7 15-16" /></svg>
-        <h2>You got it!</h2>
-        <p class="lead">${p.name} is on its way. We'll email your shipping details.</p>
-        <div class="success__item"><span><img src="${p.img}" alt="" /></span><div><b>${p.name}</b><small>Order ${order} · ${fmt(p.price)} pts</small></div></div>
-        <button class="btn btn--primary btn--block" id="view-redeemed">View in My Rewards</button>
-        <button class="btn btn--ghost btn--block" data-close>Keep browsing</button>
-      </div>`,
-      () => {
-        const cta = $(".buybar__cta", detail);
-        if (cta && currentId === p.id) {
-          cta.innerHTML = redeemButtonHTML(p);
-          wireHold();
-        }
+  if (BOXES[p.id]) setTimeout(() => openDrop({ boxId: p.id, source: "redeem", order }), 750);
+  else setTimeout(() => successSheet(p, order), 650);
+}
+
+function successSheet(p, order, item) {
+  const shown = item || { name: p.name, img: p.img };
+  openSheet(
+    `<div class="success">
+      <svg class="success__check" viewBox="0 0 52 52"><circle cx="26" cy="26" r="24" /><path d="M15 27l7 7 15-16" /></svg>
+      <h2>${item ? "What a pull!" : "You got it!"}</h2>
+      <p class="lead">${item ? `Your ${p.name} had a ${RARITY[item.rarity].label} ${BOXES[p.id].noun} inside. It's on its way.` : `${p.name} is on its way.`} We'll email your shipping details.</p>
+      <div class="success__item"${item ? ` style="--rc:${RARITY[item.rarity].color}"` : ""}><span><img src="${shown.img}" alt="" /></span><div><b>${shown.name}</b><small>Order ${order} · ${fmt(p.price)} pts</small></div></div>
+      <button class="btn btn--primary btn--block" id="view-redeemed">View in My Rewards</button>
+      <button class="btn btn--ghost btn--block" data-close>Keep browsing</button>
+    </div>`,
+    () => {
+      const cta = $(".buybar__cta", detail);
+      if (cta && currentId === p.id) {
+        cta.innerHTML = redeemButtonHTML(p);
+        wireHold();
       }
-    );
-    $("#view-redeemed").addEventListener("click", () => {
-      sheetOnClose = () => {
-        goBack();
-        setTimeout(() => {
-          setPane("rewards");
-          setTimeout(() => $("#redeemed")?.scrollIntoView({ behavior: "smooth", block: "center" }), 450);
-        }, 420);
-      };
-      closeSheet();
-    });
-  }, 650);
+    }
+  );
+  $("#view-redeemed").addEventListener("click", () => {
+    sheetOnClose = () => {
+      goBack();
+      setTimeout(() => {
+        setPane("rewards");
+        setTimeout(() => $("#redeemed")?.scrollIntoView({ behavior: "smooth", block: "center" }), 450);
+      }, 420);
+    };
+    closeSheet();
+  });
 }
 
 /* Lightbox */
@@ -1288,8 +1367,9 @@ detail.addEventListener("click", async (e) => {
     openLightbox(img.src, img);
     return;
   }
-  const rel = e.target.closest(".card");
+  const rel = e.target.closest(".card, [data-inside]");
   if (rel) {
+    if (rel.dataset.inside) rel.dataset.id = rel.dataset.inside;
     buzz();
     pendingMorphImg = $("img", rel);
     location.hash = `#/p/${rel.dataset.id}`;
@@ -1381,7 +1461,7 @@ addEventListener("keydown", (e) => {
   const lb = $(".lightbox");
   if (lb) $(".lightbox__close", lb).click();
   else if (!sheet.hidden) closeSheet();
-  else if (!drop.hidden && !drop.classList.contains("is-levelup")) closeDrop();
+  else if (!drop.hidden && !drop.classList.contains("is-levelup") && dropCtx?.source !== "redeem") closeDrop();
   else if (!detail.hidden) goBack();
 });
 
