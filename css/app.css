@@ -3266,6 +3266,10 @@ img {
   display: flex;
   gap: 10px;
 }
+.showcase__ghost:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
 .showcase__ghost {
   flex: 1;
   color: #fff;

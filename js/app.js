@@ -15,8 +15,14 @@ const CREDITS_PER_DROP = 2;
 
 /* ---------- State ---------- */
 const STORE_KEY = "hrb-rewards-demo-v2";
-const DEFAULT_STATE = { points: 0, level: 1, progress: 5, drops: 0, rewards: [], redeemed: [], active: {} };
+const DEFAULT_POINTS = 500000;
+const DEFAULT_STATE = { points: DEFAULT_POINTS, level: 1, progress: 5, drops: 0, rewards: [], redeemed: [], active: {} };
 let state = load();
+if (!state.seeded) {
+  state.points = Math.max(state.points, DEFAULT_POINTS);
+  state.seeded = true;
+  save();
+}
 
 function load() {
   try {
@@ -1008,7 +1014,7 @@ function showcase(item) {
       <div class="showcase__actions">
         <button class="btn btn--primary btn--block" id="sc-keep">Add to my collection</button>
         <div class="showcase__row">
-          <button class="btn showcase__ghost" id="sc-again">Buy another · $${box.usd}</button>
+          <button class="btn showcase__ghost" id="sc-again" ${state.points < box.price ? "disabled" : ""}>Redeem another · ${fmt(box.price)} pts</button>
           ${item.productId ? `<button class="btn showcase__ghost" id="sc-view">View item</button>` : ""}
         </div>
       </div>
@@ -1016,10 +1022,12 @@ function showcase(item) {
   wireTilt($("#sc-stage"), $("#sc-item"));
 
   const keep = () => {
-    if (!state.redeemed.some((o) => o.order === order)) {
-      state.redeemed.unshift({ productId: boxId, order, at: Date.now(), paid: box.usd, item: { productId: item.productId, name: item.name, img: item.img, card: item.card, rarity: item.rarity } });
-      save();
-    }
+    const pulled = { productId: item.productId, name: item.name, img: item.img, card: item.card, rarity: item.rarity };
+    const entry = state.redeemed.find((o) => o.order === order);
+    if (entry) entry.item = pulled;
+    else state.redeemed.unshift({ productId: boxId, order, at: Date.now(), item: pulled });
+    save();
+    setTimeout(refreshCta, 400);
   };
   drop.insertAdjacentHTML("beforeend", `<button class="drop__back" id="sc-back" aria-label="Back">${icon("arrow-left")}<span>Back</span></button>`);
   $("#sc-back").addEventListener("click", () => {
@@ -1037,7 +1045,15 @@ function showcase(item) {
     buzz();
     keep();
     closeDrop({ keepLock: !detail.hidden });
-    setTimeout(() => openPurchase(box), 380);
+    setTimeout(() => {
+      if (state.points < box.price) return toast("Not enough Unity Points", "lock");
+      const next = `HRB-${Math.floor(100000 + Math.random() * 900000)}`;
+      state.points -= box.price;
+      state.redeemed.unshift({ productId: box.id, order: next, at: Date.now() });
+      save();
+      renderPoints(700);
+      openDrop({ boxId: box.id, source: "buy", order: next });
+    }, 380);
   });
   $("#sc-view")?.addEventListener("click", () => {
     buzz();
@@ -1286,6 +1302,15 @@ function redeemButtonHTML(p, secondary = false) {
     <span class="hold__label">${owned ? "Redeem another" : "Hold to redeem"} · ${fmt(p.price)} pts</span>
   </button>`;
 }
+function refreshCta() {
+  const p = productById(currentId);
+  const cta = $(".buybar__cta", detail);
+  if (!p || !cta) return;
+  cta.innerHTML = ctaHTML(p);
+  wireHold();
+  const head = $("h2", detail);
+  if (head) head.textContent = `Unity Points: ${fmt(state.points)}`;
+}
 function ctaHTML(p) {
   if (!p.usd) return redeemButtonHTML(p);
   return `<button class="btn btn--block btn--buy" data-buy>Buy · ${money(p.usd)}</button>${redeemButtonHTML(p, true)}`;
@@ -1486,7 +1511,7 @@ function redeem(btn) {
   $(".hold__label", btn).innerHTML = `${icon("check")} Redeemed`;
   const r = btn.getBoundingClientRect();
   confetti({ x: r.left + r.width / 2, y: r.top, count: 180, power: 1.1 });
-  if (BOXES[p.id]) setTimeout(() => openDrop({ boxId: p.id, source: "redeem", order }), 750);
+  if (BOXES[p.id]) setTimeout(() => openDrop({ boxId: p.id, source: "buy", order }), 750);
   else setTimeout(() => successSheet(p, order), 650);
 }
 

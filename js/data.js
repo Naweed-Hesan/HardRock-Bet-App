@@ -22,7 +22,6 @@ const MERCH_TERMS = ["No refunds or exchanges.", "Sales are final.", "Allow 2–
 export const PRODUCTS = [
   {
     id: "lucky-you-full-size-helmet-box",
-    usd: 249.99,
     name: "Lucky You Full Size Helmet Box",
     price: 15000,
     img: "box-full-size.webp",
@@ -34,7 +33,6 @@ export const PRODUCTS = [
   },
   {
     id: "lucky-you-mini-helmet-box",
-    usd: 59.99,
     name: "Lucky You Mini Helmet Box",
     price: 5000,
     img: "box-mini.webp",
@@ -46,7 +44,6 @@ export const PRODUCTS = [
   },
   {
     id: "lucky-you-football-jersey-pack",
-    usd: 149.99,
     name: "Lucky You Football Jersey Pack",
     price: 10000,
     img: "box-jersey.webp",
@@ -58,7 +55,6 @@ export const PRODUCTS = [
   },
   {
     id: "hot-hands",
-    usd: 39.99,
     name: "Hot Hands",
     price: 5000,
     img: "box-hot-hands.webp",
@@ -70,7 +66,6 @@ export const PRODUCTS = [
   },
   {
     id: "hyped-up-sneaker-box",
-    usd: 199.99,
     name: "Hyped Up Sneaker Box",
     price: 18000,
     img: "box-hyped-up.webp",
