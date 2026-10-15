@@ -41,7 +41,7 @@ export const PRODUCTS = [
     type: "box",
     badge: "Mystery",
     description:
-      "The Lucky You Mini Helmet Box packs an authentic team mini helmet. Small box, big fun. Which team will you pull?",
+      "Every Lucky You Mini Helmet Box packs a signed, authenticated mini helmet, from stars like Josh Allen and Justin Jefferson to Hall of Famers Jerry Rice and Peyton Manning. Small box, big names.",
     terms: MYSTERY_TERMS,
   },
   {
@@ -133,13 +133,15 @@ export const BOXES = {
   },
   "lucky-you-mini-helmet-box": {
     short: "Mini Helmet Box",
-    noun: "mini helmet",
+    noun: "signed mini helmet",
     weight: 35,
     pool: [
-      { name: "Green Bay Packers Mini Helmet", img: IMG + "mini-packers.webp", rarity: "common", tags: ["Mini helmet", "Team colors", "Authentic"] },
-      { name: "Seattle Seahawks Mini Helmet", img: IMG + "mini-seahawks.webp", rarity: "common", tags: ["Mini helmet", "Team colors", "Authentic"] },
-      { name: "Tennessee Titans Throwback Mini Helmet", img: IMG + "mini-titans.webp", rarity: "rare", tags: ["Mini helmet", "Throwback", "Authentic"] },
-      { name: "Kansas City Chiefs Alternate Mini Helmet", img: IMG + "mini-chiefs.webp", rarity: "rare", tags: ["Mini helmet", "Alternate", "Authentic"] },
+      { name: "Jerry Rice Signed 49ers Mini Helmet", img: IMG + "mini-signed-jerry-rice.webp", rarity: "legendary", kind: "mini", tags: ["Signed","Mini helmet","Hall of Fame","Authenticated"] },
+      { name: "Peyton Manning Signed Colts Mini Helmet", img: IMG + "mini-signed-peyton-manning.webp", rarity: "legendary", kind: "mini", tags: ["Signed","Mini helmet","Hall of Fame","Authenticated"] },
+      { name: "Josh Allen Signed Bills Mini Helmet", img: IMG + "mini-signed-josh-allen.webp", rarity: "epic", kind: "mini", tags: ["Signed","Mini helmet","Authenticated"] },
+      { name: "Justin Jefferson Signed Vikings Mini Helmet", img: IMG + "mini-signed-justin-jefferson.webp", rarity: "epic", kind: "mini", tags: ["Signed","Mini helmet","Authenticated"] },
+      { name: "Trevor Lawrence Signed Jaguars Mini Helmet", img: IMG + "mini-signed-trevor-lawrence.webp", rarity: "rare", kind: "mini", tags: ["Signed","Mini helmet","Authenticated"] },
+      { name: "Ben Roethlisberger Signed Steelers Mini Helmet", img: IMG + "mini-signed-roethlisberger.webp", rarity: "rare", kind: "mini", tags: ["Signed","Mini helmet","Authenticated"] },
     ],
   },
   "hot-hands": {
