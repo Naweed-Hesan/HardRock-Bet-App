@@ -1021,6 +1021,12 @@ function showcase(item) {
       save();
     }
   };
+  drop.insertAdjacentHTML("beforeend", `<button class="drop__back" id="sc-back" aria-label="Back">${icon("arrow-left")}<span>Back</span></button>`);
+  $("#sc-back").addEventListener("click", () => {
+    buzz();
+    keep();
+    closeDrop({ keepLock: !detail.hidden });
+  });
   $("#sc-keep").addEventListener("click", () => {
     buzz(12);
     keep();
@@ -1729,6 +1735,7 @@ addEventListener("keydown", (e) => {
   if (lb) $(".lightbox__close", lb).click();
   else if (!sheet.hidden) closeSheet();
   else if ($(".paysheet")) $(".paysheet__x").click();
+  else if (!drop.hidden && $("#sc-back")) $("#sc-back").click();
   else if (!drop.hidden && !drop.classList.contains("is-levelup") && dropCtx?.source === "drop") closeDrop();
   else if (!detail.hidden) goBack();
 });

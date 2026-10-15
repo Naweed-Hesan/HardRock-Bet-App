@@ -2372,7 +2372,7 @@ img {
 }
 .drop__stage .drop__rarity {
   inset: auto -20% -12% -20%;
-  z-index: 2;
+  z-index: 10;
 }
 .prize__tile--hero {
   width: min(200px, 52vw);
@@ -3045,6 +3045,35 @@ img {
 }
 
 /* Showcase */
+.drop__back {
+  position: absolute;
+  z-index: 20;
+  top: calc(12px + var(--safe-top));
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px 0 12px;
+  border-radius: 20px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  animation: rise 0.4s 0.9s var(--ease-out) both;
+  transition: background 0.2s, transform 0.2s var(--ease-out);
+}
+.drop__back .icon {
+  font-size: 20px;
+}
+.drop__back:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+.drop__back:active {
+  transform: scale(0.94);
+}
 .drop.is-showcase {
   justify-content: center;
   gap: 10px;
