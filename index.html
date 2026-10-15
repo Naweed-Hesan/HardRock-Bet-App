@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Hard Rock Bet Rewards</title>
+    <meta name="description" content="Hard Rock Bet Rewards store prototype featuring the Lucky You collection." />
+    <meta name="theme-color" content="#5D3CF2" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="HR Rewards" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/png" href="assets/icons/favicon.png" />
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="preload" as="image" href="assets/img/reward-drops-banner.webp" />
+    <link rel="stylesheet" href="css/app.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar" id="topbar">
+        <div class="topbar__inner">
+          <div class="topbar__title" aria-hidden="true">
+            <span>Rewards</span>
+            <span class="topbar__points" data-points-pill></span>
+          </div>
+          <button class="icon-btn icon-btn--light" id="info-btn" aria-label="How Reward Drops work"></button>
+        </div>
+      </header>
+
+      <main class="view view--store" id="view-store">
+        <section class="hero" id="hero">
+          <button class="hero__banner" id="hero-banner" aria-label="Open your Level 1 Reward Drop">
+            <img src="assets/img/reward-drops-banner.webp" alt="Legendary Reward Drops" width="1600" height="837" />
+            <span class="hero__cta" id="hero-cta"><span class="hero__cta-dot"></span>Level 1 Drop ready · Tap to open</span>
+          </button>
+          <div class="wrap">
+            <div class="progress-card" id="progress-card">
+              <div class="progress-card__count"><b data-progress-now>0</b><span>/ 10</span></div>
+              <div class="progress-card__bar">
+                <span class="hex hex--on">1</span>
+                <div class="track"><div class="track__fill" id="track-fill"></div></div>
+                <span class="hex">2</span>
+              </div>
+              <p class="progress-card__note">Credits reset monthly</p>
+            </div>
+          </div>
+        </section>
+
+        <div class="wrap account-row">
+          <div class="segmented" role="tablist" id="segmented">
+            <span class="segmented__thumb"></span>
+            <button role="tab" data-tab="rewards">My Rewards</button>
+            <button role="tab" data-tab="store" aria-selected="true">Store</button>
+          </div>
+          <button class="points-card" id="points-card">
+            <span class="points-card__logo"></span>
+            <b class="points-card__value" data-points>0</b>
+            <span class="points-card__label">Online<br />Unity Points</span>
+            <span class="points-card__earn">See how to earn</span>
+            <span class="points-card__chev"></span>
+          </button>
+        </div>
+
+        <div class="panes" id="panes">
+          <section class="pane pane--store" data-pane="store">
+            <div class="chips" id="chips" role="tablist" aria-label="Categories"></div>
+            <div class="wrap">
+              <div class="grid" id="grid"></div>
+              <p class="footnote">* Powered by Post Motor Racing</p>
+            </div>
+          </section>
+          <section class="pane pane--rewards" data-pane="rewards" hidden></section>
+        </div>
+      </main>
+
+      <section class="view view--detail detail" id="view-detail" hidden aria-live="polite"></section>
+
+      <nav class="tabbar" id="tabbar" aria-label="Main"></nav>
+      <div class="sheet" id="sheet" hidden>
+        <div class="sheet__scrim" data-close></div>
+        <div class="sheet__panel" role="dialog" aria-modal="true">
+          <span class="sheet__grab"></span>
+          <div class="sheet__body"></div>
+        </div>
+      </div>
+      <div class="drop" id="drop" hidden></div>
+      <div class="toasts" id="toasts" aria-live="polite"></div>
+    </div>
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>
