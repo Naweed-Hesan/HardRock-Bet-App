@@ -91,9 +91,55 @@ export const CATEGORIES = [
   { id: "live", label: "Hard Rock Live", icon: "guitar", color: "#E2457E", match: () => false, empty: "Hard Rock Live tickets are coming soon." },
 ];
 
-export const DROP_REWARDS = [
-  { kind: "points", amount: 500, title: "+500 Online Unity Points", sub: "Added to your balance" },
-  { kind: "boost", title: "10% Profit Boost", sub: "Use on a 3+ leg parlay" },
-  { kind: "points", amount: 1000, title: "+1,000 Online Unity Points", sub: "Added to your balance" },
-  { kind: "spins", title: "25 Bonus Spins", sub: "Valid on featured slots" },
+export const RARITY = {
+  common: { label: "Common", color: "#a7b0c4", deep: "#5d6780", confetti: ["#ffffff", "#c9d1e0", "#a7b0c4", "#b9a8ff"] },
+  rare: { label: "Rare", color: "#3d9bff", deep: "#1659c7", confetti: ["#ffffff", "#7cc0ff", "#3d9bff", "#b9a8ff"] },
+  epic: { label: "Epic", color: "#b45cff", deep: "#6a1fd1", confetti: ["#ffffff", "#e0b3ff", "#b45cff", "#ff6aa2"] },
+  legendary: { label: "Legendary", color: "#ffc233", deep: "#c47a00", confetti: ["#fff7d6", "#ffe08a", "#ffc233", "#ff9d00", "#ffffff"] },
+};
+
+export const DROP_TABLE = {
+  common: [
+    { kind: "points", amount: 250 },
+    { kind: "points", amount: 500 },
+    { kind: "spins", amount: 10, title: "10 Bonus Spins", sub: "Valid on featured slots" },
+  ],
+  rare: [
+    { kind: "points", amount: 1000 },
+    { kind: "boost", title: "10% Profit Boost", sub: "Use on a 3+ leg parlay" },
+    { kind: "spins", amount: 25, title: "25 Bonus Spins", sub: "Valid on featured slots" },
+  ],
+  epic: [
+    { kind: "points", amount: 2500 },
+    { kind: "product", productId: "hot-hands" },
+    { kind: "product", productId: "lucky-you-mini-helmet-box" },
+    { kind: "boost", title: "25% Profit Boost", sub: "Use on any parlay" },
+  ],
+  legendary: [
+    { kind: "points", amount: 10000 },
+    { kind: "product", productId: "lucky-you-full-size-helmet-box" },
+    { kind: "product", productId: "lucky-you-football-jersey-pack" },
+  ],
+};
+
+/* Base odds for Level 1. Each level above 1 moves weight from Common to the higher tiers. */
+export function rarityOdds(level) {
+  const shift = Math.min(level - 1, 7) * 4;
+  return [
+    ["common", 55 - shift * 1.5],
+    ["rare", 28 + shift * 0.5],
+    ["epic", 13 + shift * 0.6],
+    ["legendary", 4 + shift * 0.4],
+  ];
+}
+
+export const SCRATCH_PRIZES = [
+  { kind: "points", amount: 150 },
+  { kind: "points", amount: 300 },
+  { kind: "points", amount: 750 },
+  { kind: "points", amount: 1500 },
+  { kind: "boost", title: "5% Profit Boost", sub: "Use on any single bet" },
 ];
+
+export const LEVEL_NAMES = ["", "Level 1", "Level 2", "Level 3", "Level 4", "Level 5", "Level 6", "Level 7", "Signature"];
+export const MAX_LEVEL = 8;

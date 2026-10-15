@@ -1,22 +1,22 @@
 # Hard Rock Bet Rewards — Lucky You prototype
 
-A clickable, mobile-first prototype of the Hard Rock Bet Rewards store featuring the Real Autograph **Lucky You** collection. It is a static site (HTML, CSS and vanilla JS modules, no build step) served by GitHub Pages.
+A clickable, mobile-first prototype of the Hard Rock Bet Rewards store featuring the Real Autograph **Lucky You** collection. It is a static site (HTML, CSS and vanilla JS modules, no build step, no backend) deployed on Vercel.
 
-**Live:** https://naweed-hesan.github.io/HardRock-Bet-App/
+**Live:** https://hardrockbet.vercel.app/
 
 ## What you can try
 
-- **Reward Drop** – tap the Legendary Reward Drops banner, tap the box three times to open it, and collect the reward.
-- **Store** – filter by category, tap any product to open it with a shared-element transition, swipe from the left edge to go back.
-- **My Rewards** – promo carousel, ready-to-use and in-progress rewards. Rewards you collect from a drop appear here.
-- **Sheets** – the info button and "See how to earn" open drag-to-dismiss bottom sheets. "Reset demo" in the info sheet clears your saved points.
-- **Add to Home Screen** – on iPhone/iPad use Share → Add to Home Screen; on Android use the browser menu → Install app. It opens full screen like a native app.
+- **Reward Drops (repeatable)** – tap the Legendary Reward Drops banner, tap the box three times and watch the rarity reveal: Common, Rare, Epic or Legendary, each with its own beam, colors and confetti. Points fly into your balance; boxes and boosts fly into My Rewards. Each drop adds credits, and a full bar triggers a Level Up that improves your odds, up to Signature.
+- **Daily Scratch** – in My Rewards, scratch the foil with your finger, collect the prize and get a fresh card.
+- **Hold to redeem** – once you have enough points, press and hold the redeem button on a product page. Redeemed items show up in My Rewards with an order number.
+- **Store** – filter by category, open any product with a shared-element transition, tap the photo for a full-screen viewer (double-tap to zoom, swipe down to close), swipe from the left edge to go back.
+- **My Rewards** – auto-advancing promo carousel, expandable rewards you can activate, redeemed items and in-progress rewards.
+- **Odds and reset** – the ⓘ button shows how drops work, your odds at your current level, and a **Reset demo** button that clears all saved progress.
+- **Add to Home Screen** – on iPhone/iPad use Share → Add to Home Screen; on Android use the browser menu → Install app.
 
-Layouts: 2-column grid on phones, 4 columns on tablets (700px+), 5 on wide screens. Animations respect the system Reduce Motion setting.
+Everything is saved in the browser's local storage, so progress survives a refresh. Layouts: 2-column grid on phones, 4 columns on tablets (700px+), 5 on wide screens. Animations respect the system Reduce Motion setting.
 
 ## Run locally
-
-Any static server works, for example:
 
 ```sh
 npx serve .
@@ -30,11 +30,11 @@ Then open the printed URL. Opening `index.html` directly from disk will not work
 index.html              App shell
 css/app.css             Design tokens, layout and motion
 js/app.js               Rendering, routing, interactions
-js/data.js              Products, categories, drop rewards
+js/data.js              Products, categories, drop odds and prize tables
 js/icons.js             Inline SVG icons (Lucide, Phosphor, Unity mark)
 assets/img/             Optimized WebP product and banner images
 assets/icons/           App icons and the Featured chip icon
 manifest.webmanifest    Home screen install settings
 ```
 
-Product copy, prices and promo text are placeholders for the prototype.
+Product copy, prices, odds and promo text are placeholders for the prototype.
