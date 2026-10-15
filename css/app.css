@@ -550,10 +550,6 @@ img {
   transform: scale(0.965);
 }
 @media (hover: hover) {
-  .card:hover {
-    transform: translateY(-3px);
-    box-shadow: inset 0 0 0 1px var(--card-line), 0 10px 24px rgba(40, 20, 100, 0.14);
-  }
   .card:hover .card__img img {
     transform: scale(1.04);
   }
