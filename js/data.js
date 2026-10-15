@@ -14,7 +14,7 @@ const jersey = (player, club) =>
 
 const MYSTERY_TERMS = [
   "Contents are randomly selected at the time of redemption.",
-  "Every box contains at least one authenticated signed item.",
+  "Every item is authenticated before it ships.",
   "Sales are final.",
 ];
 const MERCH_TERMS = ["No refunds or exchanges.", "Sales are final.", "Allow 2–3 weeks for delivery."];
@@ -41,7 +41,7 @@ export const PRODUCTS = [
     type: "box",
     badge: "Mystery",
     description:
-      "The Lucky You Mini Helmet Box packs a signed, authenticated mini helmet. Small box, big names. Will you pull a legend?",
+      "The Lucky You Mini Helmet Box packs an authentic team mini helmet. Small box, big fun. Which team will you pull?",
     terms: MYSTERY_TERMS,
   },
   {
@@ -65,7 +65,7 @@ export const PRODUCTS = [
     type: "box",
     badge: "New",
     description:
-      "Do you have the Hot Hands? Each box contains one slabbed and graded trading card, sealed and authenticated. Roll with us and see what you pull.",
+      "Do you have the Hot Hands? Each box contains one PSA-graded trading card, from modern Topps Chrome hits all the way up to Michael Jordan and a Ja'Marr Chase 1 of 1. Roll with us and see what you pull.",
     terms: MYSTERY_TERMS,
   },
   { id: "troy-aikman-signed-guitar", name: "Troy Aikman Signed Guitar", price: 45000, img: "guitar-aikman.webp", type: "guitar", description: guitar("Troy Aikman", "Dallas Cowboys"), terms: MERCH_TERMS },
@@ -111,7 +111,6 @@ const HELMETS = [
   { productId: "swarovski-crystal-chargers-helmet", player: "Swarovski Crystal", rarity: "legendary" },
   { productId: "swarovski-crystal-bengals-helmet", player: "Swarovski Crystal", rarity: "legendary" },
 ];
-const DOWNGRADE = { rare: "common", epic: "rare", legendary: "epic" };
 
 export const BOXES = {
   "lucky-you-full-size-helmet-box": {
@@ -124,19 +123,26 @@ export const BOXES = {
     short: "Mini Helmet Box",
     noun: "mini helmet",
     weight: 35,
-    pool: HELMETS.map((h) => ({ ...h, rarity: DOWNGRADE[h.rarity], name: `${h.player} Signed Mini Helmet` })),
+    pool: [
+      { name: "Green Bay Packers Mini Helmet", img: IMG + "mini-packers.webp", rarity: "common", tags: ["Mini helmet", "Team colors", "Authentic"] },
+      { name: "Seattle Seahawks Mini Helmet", img: IMG + "mini-seahawks.webp", rarity: "common", tags: ["Mini helmet", "Team colors", "Authentic"] },
+      { name: "Tennessee Titans Throwback Mini Helmet", img: IMG + "mini-titans.webp", rarity: "rare", tags: ["Mini helmet", "Throwback", "Authentic"] },
+      { name: "Kansas City Chiefs Alternate Mini Helmet", img: IMG + "mini-chiefs.webp", rarity: "rare", tags: ["Mini helmet", "Alternate", "Authentic"] },
+    ],
   },
   "hot-hands": {
     short: "Hot Hands Box",
     noun: "graded card",
     weight: 0,
     pool: [
-      { rarity: "legendary", name: "Patrick Mahomes Signed Rookie Card", card: { player: "Patrick Mahomes", team: "Kansas City", number: 15, year: 2017, colors: ["#e31837", "#ffb81c"] } },
-      { rarity: "epic", name: "Peyton Manning Signed Card", card: { player: "Peyton Manning", team: "Denver", number: 18, year: 2012, colors: ["#fb4f14", "#0a2343"] } },
-      { rarity: "rare", name: "Brock Purdy Signed Rookie Card", card: { player: "Brock Purdy", team: "San Francisco", number: 13, year: 2022, colors: ["#aa0000", "#b3995d"] } },
-      { rarity: "rare", name: "Drew Brees Signed Card", card: { player: "Drew Brees", team: "New Orleans", number: 9, year: 2009, colors: ["#101820", "#d3bc8d"] } },
-      { rarity: "common", name: "Troy Aikman Signed Card", card: { player: "Troy Aikman", team: "Dallas", number: 8, year: 1993, colors: ["#041e42", "#869397"] } },
-      { rarity: "common", name: "LaDainian Tomlinson Signed Card", card: { player: "LaDainian Tomlinson", team: "Los Angeles", number: 21, year: 2006, colors: ["#0080c6", "#ffc20e"] } },
+      { name: "Ja'Marr Chase 2025 Donruss Elite 1/1 · PSA 10", img: IMG + "psa-chase-elite-1of1.webp", rarity: "legendary", kind: "card", tags: ["1 of 1", "PSA 10", "Gem Mint"] },
+      { name: "Michael Jordan 1999 UD Master Collection · PSA 9", img: IMG + "psa-jordan-master-collection.webp", rarity: "legendary", kind: "card", tags: ["Master Collection", "PSA 9", "Mint"] },
+      { name: "Tom Brady 2004 Fleer Hot Materials Jersey · PSA 8", img: IMG + "psa-brady-hot-materials.webp", rarity: "epic", kind: "card", tags: ["Game-worn jersey", "PSA 8", "Red Hot"] },
+      { name: "Derrick Henry 2024 Absolute Kaboom! · PSA 9", img: IMG + "psa-henry-kaboom.webp", rarity: "epic", kind: "card", tags: ["Kaboom!", "PSA 9", "Mint"] },
+      { name: "Cooper Flagg 2025 Topps Chrome Go Time Raywave · PSA 10", img: IMG + "psa-flagg-raywave.webp", rarity: "rare", kind: "card", tags: ["Rookie", "PSA 10", "Gem Mint"] },
+      { name: "Shohei Ohtani 2018 Finest Rookie · PSA 9", img: IMG + "psa-ohtani-finest-rc.webp", rarity: "rare", kind: "card", tags: ["Rookie", "PSA 9", "Mint"] },
+      { name: "LeBron James 2020 Court Kings · PSA 10", img: IMG + "psa-lebron-court-kings.webp", rarity: "common", kind: "card", tags: ["Court Kings", "PSA 10", "Gem Mint"] },
+      { name: "Shohei Ohtani 2024 Topps Chrome Ultraviolet · PSA 9", img: IMG + "psa-ohtani-ultraviolet.webp", rarity: "common", kind: "card", tags: ["All-Stars", "PSA 9", "Mint"] },
     ],
   },
   "lucky-you-football-jersey-pack": {

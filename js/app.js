@@ -812,6 +812,7 @@ function rollItem(boxId, level) {
   const rarity = weighted(boxOdds(boxId, level));
   const entry = pick(BOXES[boxId].pool.filter((i) => i.rarity === rarity));
   if (entry.card) return { card: entry.card, name: entry.name, rarity, boxId, productId: null, img: null };
+  if (!entry.productId) return { name: entry.name, img: entry.img, rarity, boxId, productId: null, kind: entry.kind, tags: entry.tags };
   const p = productById(entry.productId);
   return { productId: p.id, name: entry.name || p.name, img: p.img, rarity, boxId };
 }
@@ -865,28 +866,50 @@ async function revealPrize(box) {
   const bonus = source === "drop" ? BONUS_POINTS[item.rarity] : 0;
   const R = RARITY[item.rarity];
   const big = item.rarity === "legendary" || item.rarity === "epic";
-  buzz(big ? [40, 50, 40, 50, 120] : [30, 40, 60]);
   drop.style.setProperty("--rc", R.color);
   drop.style.setProperty("--rd", R.deep);
-  box.classList.add("burst");
-  $(".drop__flash", drop).classList.add("go");
   ["hint", "taps", "boxname"].forEach((k) => ($(`.drop__${k}`, drop).style.opacity = 0));
-  drop.classList.add("is-revealing", `is-${item.rarity}`);
+
   const stage = $(".drop__stage", drop);
-  await wait(380);
-  stage.insertAdjacentHTML(
-    "beforeend",
-    `<div class="drop__beam"></div><div class="drop__rarity">${R.label}</div><div class="drop__rise ${item.card ? "is-card" : ""}">${itemVisual(item)}</div>`
-  );
-  confetti({ colors: R.confetti, count: big ? 240 : 140, power: big ? 1.25 : 1 });
-  await wait(item.rarity === "legendary" ? 1500 : 1150);
+  const tall = item.kind === "card";
+  stage.innerHTML = `<div class="rig${tall ? " is-tall" : ""}">
+      <div class="rig__glow"></div>
+      <div class="rig__beam"></div>
+      <div class="rig__item">${itemVisual(item)}</div>
+      <img class="rig__base" src="${box.src}" alt="" />
+      <img class="rig__lid" src="${box.src}" alt="" />
+      <div class="rig__sparks">${Array.from({ length: 14 }, (_, i) => `<i style="--a:${(i * 360) / 14}deg;--d:${(i % 5) * 40}ms"></i>`).join("")}</div>
+    </div>`;
+  const rig = $(".rig", stage);
+
+  // 1. Charge: the box rumbles harder and light leaks out
+  rig.classList.add("is-charging");
+  drop.classList.add("is-rumble");
+  buzz([20, 60, 25, 50, 30, 40, 40, 30, 60]);
+  await wait(1150);
+
+  // 2. Burst: lid blows off, beam shoots up, flash and confetti
+  drop.classList.remove("is-rumble");
+  rig.classList.remove("is-charging");
+  rig.classList.add("is-open");
+  $(".drop__flash", drop).classList.add("go");
+  drop.classList.add("is-revealing", `is-${item.rarity}`);
+  buzz(big ? [60, 40, 120] : [50, 30, 60]);
+  confetti({ colors: R.confetti, count: big ? 260 : 150, power: big ? 1.3 : 1.05 });
+  stage.insertAdjacentHTML("beforeend", `<div class="drop__rarity">${R.label}</div>`);
+
+  // 3. The item rises out of the box and the box falls away
+  await wait(item.rarity === "legendary" ? 2000 : 1700);
+  rig.classList.add("is-presented");
+  await wait(450);
+
   if (source === "buy") {
     showcase(item);
     return;
   }
   stage.innerHTML = `<div class="drop__reveal"><div class="prize">
       <span class="prize__rarity">${R.label}</span>
-      <div class="prize__tile prize__tile--img prize__tile--hero ${item.card ? "is-card" : ""}">${itemVisual(item)}</div>
+      <div class="prize__tile prize__tile--img prize__tile--hero${tall ? " is-tall" : ""}">${itemVisual(item)}</div>
       <small>You pulled a ${BOXES[boxId].noun}</small>
       <h3>${item.name}</h3>
       <p>${bonus ? `${icon("unity")} +${fmt(bonus)} bonus Unity Points` : "It ships to the address on your account."}</p>
@@ -967,7 +990,7 @@ function showcase(item) {
   const box = productById(boxId);
   const R = RARITY[item.rarity];
   const kind = item.card ? "card" : BOXES[boxId].noun.includes("jersey") ? "jersey" : "helmet";
-  const tags = [...TAGS[kind], ...(item.name.includes("1/1") ? ["One of One"] : []), ...(item.name.includes("Crystal") ? ["Swarovski"] : [])];
+  const tags = item.tags || [...TAGS[kind], ...(item.name.includes("1/1") ? ["One of One"] : []), ...(item.name.includes("Crystal") ? ["Swarovski"] : [])];
   drop.classList.add("is-showcase");
   $(".drop__title", drop).innerHTML = item.rarity === "legendary" ? "Legendary!" : item.rarity === "epic" ? "Epic pull!" : "Nice pull!";
   $(".drop__eyebrow", drop).textContent = `Inside your ${box.name}`;
@@ -975,7 +998,7 @@ function showcase(item) {
     <div class="showcase">
       <div class="showcase__stage" id="sc-stage">
         <div class="showcase__glow"></div>
-        <div class="showcase__item ${item.card ? "is-card" : ""}" id="sc-item">${itemVisual(item)}<span class="showcase__shine"></span></div>
+        <div class="showcase__item ${item.card ? "is-card" : ""}${item.kind === "card" ? " is-tall" : ""}" id="sc-item">${itemVisual(item)}<span class="showcase__shine"></span></div>
         <div class="showcase__floor"></div>
       </div>
       <span class="prize__rarity showcase__rarity">${R.label}</span>
@@ -1279,12 +1302,12 @@ function insideHTML(p) {
     <div class="inside__row">${items
       .map((it, i) => {
         const style = `style="--rc:${RARITY[it.rarity].color};--i:${i}"`;
-        if (it.card)
-          return `<div class="inside__item" ${style}>
-            <span class="inside__img is-card">${slabHTML(it.card, it.rarity, "slab--mini")}</span>
+        if (!it.productId)
+          return `<button class="inside__item" data-zoom-src="${it.img}" ${style}>
+            <span class="inside__img${it.kind === "card" ? " is-tall" : ""}"><img src="${it.img}" alt="" loading="lazy" /></span>
             <small>${RARITY[it.rarity].label}</small>
             <b>${it.name}</b>
-          </div>`;
+          </button>`;
         const ip = productById(it.productId);
         return `<button class="inside__item" data-inside="${ip.id}" ${style}>
           <span class="inside__img"><img src="${ip.img}" alt="" loading="lazy" /></span>
@@ -1593,6 +1616,11 @@ detail.addEventListener("click", async (e) => {
   if (e.target.closest("[data-back]")) {
     buzz();
     goBack();
+    return;
+  }
+  const zoomItem = e.target.closest("[data-zoom-src]");
+  if (zoomItem) {
+    openLightbox(zoomItem.dataset.zoomSrc, $("img", zoomItem));
     return;
   }
   const zoomBtn = e.target.closest("[data-zoom]");
