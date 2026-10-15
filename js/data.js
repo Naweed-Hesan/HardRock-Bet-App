@@ -68,6 +68,18 @@ export const PRODUCTS = [
       "Do you have the Hot Hands? Each box contains one PSA-graded trading card, from modern Topps Chrome hits all the way up to Michael Jordan and a Ja'Marr Chase 1 of 1. Roll with us and see what you pull.",
     terms: MYSTERY_TERMS,
   },
+  {
+    id: "hyped-up-sneaker-box",
+    usd: 199.99,
+    name: "Hyped Up Sneaker Box",
+    price: 18000,
+    img: "box-hyped-up.webp",
+    type: "box",
+    badge: "New",
+    description:
+      "Get Hyped Up. Every Sneaker Box holds one pair of deadstock grail sneakers, from Off-White collabs to Travis Scott Jordans. Authenticated, boxed and ready to flex. Roll with us and see what you pull.",
+    terms: MYSTERY_TERMS,
+  },
   { id: "troy-aikman-signed-guitar", name: "Troy Aikman Signed Guitar", price: 45000, img: "guitar-aikman.webp", type: "guitar", description: guitar("Troy Aikman", "Dallas Cowboys"), terms: MERCH_TERMS },
   { id: "patrick-mahomes-signed-guitar", name: "Patrick Mahomes Signed Guitar", price: 42000, img: "guitar-mahomes-1.webp", type: "guitar", description: guitar("Patrick Mahomes", "Kansas City Chiefs"), terms: MERCH_TERMS },
   { id: "peyton-manning-signed-guitar", name: "Peyton Manning Signed Guitar", price: 44000, img: "guitar-peyton.webp", type: "guitar", description: guitar("Peyton Manning", "Denver Broncos"), terms: MERCH_TERMS },
@@ -143,6 +155,16 @@ export const BOXES = {
       { name: "Shohei Ohtani 2018 Finest Rookie · PSA 9", img: IMG + "psa-ohtani-finest-rc.webp", rarity: "rare", kind: "card", tags: ["Rookie", "PSA 9", "Mint"] },
       { name: "LeBron James 2020 Court Kings · PSA 10", img: IMG + "psa-lebron-court-kings.webp", rarity: "common", kind: "card", tags: ["Court Kings", "PSA 10", "Gem Mint"] },
       { name: "Shohei Ohtani 2024 Topps Chrome Ultraviolet · PSA 9", img: IMG + "psa-ohtani-ultraviolet.webp", rarity: "common", kind: "card", tags: ["All-Stars", "PSA 9", "Mint"] },
+    ],
+  },
+  "hyped-up-sneaker-box": {
+    short: "Sneaker Box",
+    noun: "pair of sneakers",
+    weight: 0,
+    pool: [
+      { name: "Off-White x Air Jordan 1 Retro High OG \"Chicago\"", img: IMG + "sneaker-offwhite-jordan1-chicago.webp", rarity: "legendary", kind: "sneaker", tags: ["The Ten", "Deadstock", "Authenticated"] },
+      { name: "Travis Scott x Air Jordan 1 Low OG", img: IMG + "sneaker-travis-jordan1-low.webp", rarity: "epic", kind: "sneaker", tags: ["Reverse Swoosh", "Deadstock", "Authenticated"] },
+      { name: "Off-White x Nike Air Force 1 Low \"University Gold\"", img: IMG + "sneaker-offwhite-af1-gold.webp", rarity: "rare", kind: "sneaker", tags: ["Off-White", "Deadstock", "Authenticated"] },
     ],
   },
   "lucky-you-football-jersey-pack": {
