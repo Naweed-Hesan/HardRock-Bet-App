@@ -998,6 +998,7 @@ function showcase(item) {
   const kind = item.card ? "card" : BOXES[boxId].noun.includes("jersey") ? "jersey" : "helmet";
   const tags = item.tags || [...TAGS[kind], ...(item.name.includes("1/1") ? ["One of One"] : []), ...(item.name.includes("Crystal") ? ["Swarovski"] : [])];
   drop.classList.add("is-showcase");
+  ["boxname", "hint", "taps"].forEach((k) => $(`.drop__${k}`, drop)?.remove());
   $(".drop__title", drop).innerHTML = item.rarity === "legendary" ? "Legendary!" : item.rarity === "epic" ? "Epic pull!" : "Nice pull!";
   $(".drop__eyebrow", drop).textContent = `Inside your ${box.name}`;
   $(".drop__stage", drop).outerHTML = `
@@ -1014,7 +1015,7 @@ function showcase(item) {
       <div class="showcase__actions">
         <button class="btn btn--primary btn--block" id="sc-keep">Add to my collection</button>
         <div class="showcase__row">
-          <button class="btn showcase__ghost" id="sc-again" ${state.points < box.price ? "disabled" : ""}>Redeem another · ${fmt(box.price)} pts</button>
+          <button class="btn showcase__ghost" id="sc-again" ${state.points < box.price ? "disabled" : ""}>Redeem another</button>
           ${item.productId ? `<button class="btn showcase__ghost" id="sc-view">View item</button>` : ""}
         </div>
       </div>
@@ -1510,7 +1511,7 @@ function redeem(btn) {
   btn.classList.add("is-done");
   $(".hold__label", btn).innerHTML = `${icon("check")} Redeemed`;
   const r = btn.getBoundingClientRect();
-  confetti({ x: r.left + r.width / 2, y: r.top, count: 180, power: 1.1 });
+  if (!BOXES[p.id]) confetti({ x: r.left + r.width / 2, y: r.top, count: 180, power: 1.1 });
   if (BOXES[p.id]) setTimeout(() => openDrop({ boxId: p.id, source: "buy", order }), 750);
   else setTimeout(() => successSheet(p, order), 650);
 }
