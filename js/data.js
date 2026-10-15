@@ -22,6 +22,7 @@ const MERCH_TERMS = ["No refunds or exchanges.", "Sales are final.", "Allow 2–
 export const PRODUCTS = [
   {
     id: "lucky-you-full-size-helmet-box",
+    usd: 249.99,
     name: "Lucky You Full Size Helmet Box",
     price: 15000,
     img: "box-full-size.webp",
@@ -33,6 +34,7 @@ export const PRODUCTS = [
   },
   {
     id: "lucky-you-mini-helmet-box",
+    usd: 59.99,
     name: "Lucky You Mini Helmet Box",
     price: 5000,
     img: "box-mini.webp",
@@ -44,6 +46,7 @@ export const PRODUCTS = [
   },
   {
     id: "lucky-you-football-jersey-pack",
+    usd: 149.99,
     name: "Lucky You Football Jersey Pack",
     price: 10000,
     img: "box-jersey.webp",
@@ -55,6 +58,7 @@ export const PRODUCTS = [
   },
   {
     id: "hot-hands",
+    usd: 39.99,
     name: "Hot Hands",
     price: 5000,
     img: "box-hot-hands.webp",
@@ -121,6 +125,19 @@ export const BOXES = {
     noun: "mini helmet",
     weight: 35,
     pool: HELMETS.map((h) => ({ ...h, rarity: DOWNGRADE[h.rarity], name: `${h.player} Signed Mini Helmet` })),
+  },
+  "hot-hands": {
+    short: "Hot Hands Box",
+    noun: "graded card",
+    weight: 0,
+    pool: [
+      { rarity: "legendary", name: "Patrick Mahomes Signed Rookie Card", card: { player: "Patrick Mahomes", team: "Kansas City", number: 15, year: 2017, colors: ["#e31837", "#ffb81c"] } },
+      { rarity: "epic", name: "Peyton Manning Signed Card", card: { player: "Peyton Manning", team: "Denver", number: 18, year: 2012, colors: ["#fb4f14", "#0a2343"] } },
+      { rarity: "rare", name: "Brock Purdy Signed Rookie Card", card: { player: "Brock Purdy", team: "San Francisco", number: 13, year: 2022, colors: ["#aa0000", "#b3995d"] } },
+      { rarity: "rare", name: "Drew Brees Signed Card", card: { player: "Drew Brees", team: "New Orleans", number: 9, year: 2009, colors: ["#101820", "#d3bc8d"] } },
+      { rarity: "common", name: "Troy Aikman Signed Card", card: { player: "Troy Aikman", team: "Dallas", number: 8, year: 1993, colors: ["#041e42", "#869397"] } },
+      { rarity: "common", name: "LaDainian Tomlinson Signed Card", card: { player: "LaDainian Tomlinson", team: "Los Angeles", number: 21, year: 2006, colors: ["#0080c6", "#ffc20e"] } },
+    ],
   },
   "lucky-you-football-jersey-pack": {
     short: "Football Jersey Pack",

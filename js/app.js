@@ -298,7 +298,7 @@ function cardHTML(p, i) {
       ${p.badge ? `<span class="badge ${badgeClass(p.badge)}">${p.badge}</span>` : ""}
     </div>
     <h3 class="card__title">${p.name}</h3>
-    <div class="price">${icon("unity")}<span>${fmt(p.price)}</span></div>
+    <div class="price">${p.usd ? `<b class="price__usd">$${p.usd}</b><span class="price__or">or</span>` : ""}${icon("unity")}<span>${fmt(p.price)}</span></div>
   </button>`;
 }
 function wireImages(root) {
@@ -334,6 +334,7 @@ const BASE_READY = [
 ];
 
 function rewardTile(r) {
+  if (r.card) return `<span class="reward__tile reward__tile--img reward__tile--slab">${slabHTML(r.card, r.rarity, "slab--mini")}</span>`;
   if (r.img) return `<span class="reward__tile reward__tile--img"><img src="${r.img}" alt="" /></span>`;
   return `<span class="reward__tile" style="--tile:${r.tile}">${icon(r.icon)}</span>`;
 }
@@ -403,9 +404,9 @@ function renderRewards() {
           if (!p) return "";
           const it = o.item;
           const rc = it ? `style="--i:${i};--rc:${RARITY[it.rarity].color}"` : `style="--i:${i}"`;
-          return `<button class="redeemed__item ${it ? "has-item" : ""}" data-open="${it ? it.productId : p.id}" ${rc}>
-            <span class="redeemed__img"><img src="${it ? it.img : p.img}" alt="" />${it ? `<span class="redeemed__box"><img src="${p.img}" alt="" /></span>` : ""}</span>
-            <b>${it ? it.name : p.name}</b><small>${it ? `${RARITY[it.rarity].label} · ` : ""}${o.order} · Processing</small></button>`;
+          return `<button class="redeemed__item ${it ? "has-item" : ""}" data-open="${it?.productId || p.id}" ${rc}>
+            <span class="redeemed__img ${it?.card ? "is-card" : ""}">${it ? itemVisual(it, "slab--mini") : `<img src="${p.img}" alt="" />`}${it ? `<span class="redeemed__box"><img src="${p.img}" alt="" /></span>` : ""}</span>
+            <b>${it ? it.name : p.name}</b><small>${it ? `${RARITY[it.rarity].label} · ` : ""}${o.paid ? `$${o.paid} · ` : ""}${o.order} · Processing</small></button>`;
         })
         .join("")}</div>
     </section>`
@@ -763,6 +764,26 @@ $("#points-card").addEventListener("click", () => {
     <button class="btn btn--primary btn--block" data-close>Start earning</button>`);
 });
 
+/* ---------- Item visuals ---------- */
+function slabHTML(card, rarity, cls = "") {
+  const [c1, c2] = card.colors;
+  const last = card.player.split(" ").slice(-1)[0];
+  return `<div class="slab ${cls}" style="--c1:${c1};--c2:${c2};--rc:${RARITY[rarity].color}">
+    <div class="slab__label"><b>HOT HANDS</b><span>${card.year} · ${card.player.toUpperCase()}</span><em>GEM MT<strong>10</strong></em></div>
+    <div class="slab__card">
+      <span class="slab__num">${card.number}</span>
+      <span class="slab__team">${card.team}</span>
+      <span class="slab__name">${last}</span>
+      <svg class="slab__sig" viewBox="0 0 120 40" aria-hidden="true"><path d="M5 30 C 20 5, 30 35, 42 18 S 60 8, 66 24 S 84 34, 92 14 L 116 10" /></svg>
+      <span class="slab__auto">AUTO</span>
+    </div>
+  </div>`;
+}
+function itemVisual(item, cls = "") {
+  if (item.card) return slabHTML(item.card, item.rarity, cls);
+  return `<img class="${cls}" src="${item.img}" alt="" />`;
+}
+
 /* ---------- Reward Drop ---------- */
 const drop = $("#drop");
 banner.addEventListener("click", () => {
@@ -775,10 +796,11 @@ banner.addEventListener("click", () => {
 });
 
 function weighted(entries) {
-  const total = entries.reduce((s, [, w]) => s + w, 0);
+  const live = entries.filter(([, w]) => w > 0);
+  const total = live.reduce((s, [, w]) => s + w, 0);
   let roll = Math.random() * total;
-  for (const [key, w] of entries) if ((roll -= w) <= 0) return key;
-  return entries[entries.length - 1][0];
+  for (const [key, w] of live) if ((roll -= w) <= 0) return key;
+  return live[live.length - 1][0];
 }
 const pickBox = () => weighted(Object.entries(BOXES).map(([id, b]) => [id, b.weight]));
 
@@ -789,6 +811,7 @@ function boxOdds(boxId, level) {
 function rollItem(boxId, level) {
   const rarity = weighted(boxOdds(boxId, level));
   const entry = pick(BOXES[boxId].pool.filter((i) => i.rarity === rarity));
+  if (entry.card) return { card: entry.card, name: entry.name, rarity, boxId, productId: null, img: null };
   const p = productById(entry.productId);
   return { productId: p.id, name: entry.name || p.name, img: p.img, rarity, boxId };
 }
@@ -796,33 +819,37 @@ function rollItem(boxId, level) {
 let dropCtx = null;
 function openDrop({ boxId = pickBox(), source = "drop", order = null } = {}) {
   if (!drop.hidden) return;
+  const oneTap = source === "buy";
   dropCtx = { boxId, source, order };
   const boxProduct = productById(boxId);
   let hits = 0;
   drop.hidden = false;
-  drop.className = "drop";
+  drop.className = `drop${oneTap ? " is-arriving" : ""}`;
   drop.style.removeProperty("--rc");
   document.body.classList.add("is-locked");
+  const eyebrow = source === "drop" ? `${LEVEL_NAMES[state.level]} Drop` : `Order ${order}`;
+  const title = source === "drop" ? "Legendary<br/>Reward Drop" : source === "buy" ? "Your box<br/>is here" : "Open your<br/>Lucky You box";
   drop.innerHTML = `
     <div class="drop__rays"></div>
     ${source === "drop" ? `<button class="icon-btn icon-btn--light drop__close" aria-label="Close">${icon("x")}</button>` : ""}
-    <div class="drop__eyebrow">${source === "redeem" ? `Order ${order}` : `${LEVEL_NAMES[state.level]} Drop`}</div>
-    <h2 class="drop__title">${source === "redeem" ? "Open your<br/>Lucky You box" : "Legendary<br/>Reward Drop"}</h2>
+    <div class="drop__eyebrow">${eyebrow}</div>
+    <h2 class="drop__title">${title}</h2>
     <div class="drop__stage"><img class="drop__box" src="${boxProduct.img}" alt="${boxProduct.name}" /></div>
     <p class="drop__boxname">${boxProduct.name}</p>
-    <p class="drop__hint">Tap the box to open it</p>
-    <div class="drop__taps"><span></span><span></span><span></span></div>
+    <p class="drop__hint">${oneTap ? "Tap the box to open it" : "Tap the box to open it"}</p>
+    ${oneTap ? `<div class="drop__taps drop__taps--one"><span></span></div>` : `<div class="drop__taps"><span></span><span></span><span></span></div>`}
     <div class="drop__flash"></div>`;
   const box = $(".drop__box", drop);
   const dots = $$(".drop__taps span", drop);
   $(".drop__close", drop)?.addEventListener("click", () => closeDrop());
   box.addEventListener("click", () => {
-    if (hits >= 3) return;
+    const needed = oneTap ? 1 : 3;
+    if (hits >= needed) return;
     hits++;
     dots[hits - 1].classList.add("on");
     box.classList.remove("hit-1", "hit-2");
     void box.offsetWidth;
-    if (hits < 3) {
+    if (hits < needed) {
       buzz(hits === 1 ? 15 : [20, 30, 20]);
       box.classList.add(hits === 1 ? "hit-1" : "hit-2");
       $(".drop__hint", drop).textContent = hits === 1 ? "Keep going…" : "One more!";
@@ -849,13 +876,17 @@ async function revealPrize(box) {
   await wait(380);
   stage.insertAdjacentHTML(
     "beforeend",
-    `<div class="drop__beam"></div><div class="drop__rarity">${R.label}</div><img class="drop__rise" src="${item.img}" alt="" />`
+    `<div class="drop__beam"></div><div class="drop__rarity">${R.label}</div><div class="drop__rise ${item.card ? "is-card" : ""}">${itemVisual(item)}</div>`
   );
   confetti({ colors: R.confetti, count: big ? 240 : 140, power: big ? 1.25 : 1 });
   await wait(item.rarity === "legendary" ? 1500 : 1150);
+  if (source === "buy") {
+    showcase(item);
+    return;
+  }
   stage.innerHTML = `<div class="drop__reveal"><div class="prize">
       <span class="prize__rarity">${R.label}</span>
-      <div class="prize__tile prize__tile--img prize__tile--hero"><img src="${item.img}" alt="" /></div>
+      <div class="prize__tile prize__tile--img prize__tile--hero ${item.card ? "is-card" : ""}">${itemVisual(item)}</div>
       <small>You pulled a ${BOXES[boxId].noun}</small>
       <h3>${item.name}</h3>
       <p>${bonus ? `${icon("unity")} +${fmt(bonus)} bonus Unity Points` : "It ships to the address on your account."}</p>
@@ -874,7 +905,7 @@ async function collect(item, bonus, btn) {
 
   if (source === "redeem") {
     const entry = state.redeemed.find((o) => o.order === order);
-    if (entry) entry.item = { productId: item.productId, name: item.name, img: item.img, rarity: item.rarity };
+    if (entry) entry.item = { productId: item.productId, name: item.name, img: item.img, card: item.card, rarity: item.rarity };
     save();
     closeDrop({ keepLock: true });
     await wait(300);
@@ -893,6 +924,7 @@ async function collect(item, bonus, btn) {
     sub: `Pulled from a Lucky You ${BOXES[boxId].short}`,
     exp: `${R.label} · ${LEVEL_NAMES[state.level]} Drop`,
     img: item.img,
+    card: item.card,
     rarity: item.rarity,
     fresh: true,
     detail: "Claim it and we'll ship it to the address on your account, authenticated and ready to display.",
@@ -906,7 +938,9 @@ async function collect(item, bonus, btn) {
       count: 1,
       size: 72,
       spread: 0,
-      html: `<img class="flyer__img" src="${item.img}" alt="" style="box-shadow:0 0 0 3px ${R.color},0 10px 30px rgba(0,0,0,.35)" />`,
+      html: item.card
+        ? `<div class="flyer__img flyer__slab">${slabHTML(item.card, item.rarity)}</div>`
+        : `<img class="flyer__img" src="${item.img}" alt="" style="box-shadow:0 0 0 3px ${R.color},0 10px 30px rgba(0,0,0,.35)" />`,
       onLand: () => {
         bump(tab);
         if (activePane !== "rewards") tab.classList.add("has-new");
@@ -923,6 +957,192 @@ async function collect(item, bonus, btn) {
   } else {
     document.body.classList.remove("is-locked");
     recharge();
+  }
+}
+
+/* ---------- Showcase (after a purchase) ---------- */
+const TAGS = { helmet: ["Signed", "Speedflex", "Authenticated"], jersey: ["Signed", "Match style", "Authenticated"], card: ["Signed", "Graded 10", "Slabbed"] };
+function showcase(item) {
+  const { boxId, order } = dropCtx;
+  const box = productById(boxId);
+  const R = RARITY[item.rarity];
+  const kind = item.card ? "card" : BOXES[boxId].noun.includes("jersey") ? "jersey" : "helmet";
+  const tags = [...TAGS[kind], ...(item.name.includes("1/1") ? ["One of One"] : []), ...(item.name.includes("Crystal") ? ["Swarovski"] : [])];
+  drop.classList.add("is-showcase");
+  $(".drop__title", drop).innerHTML = item.rarity === "legendary" ? "Legendary!" : item.rarity === "epic" ? "Epic pull!" : "Nice pull!";
+  $(".drop__eyebrow", drop).textContent = `Inside your ${box.name}`;
+  $(".drop__stage", drop).outerHTML = `
+    <div class="showcase">
+      <div class="showcase__stage" id="sc-stage">
+        <div class="showcase__glow"></div>
+        <div class="showcase__item ${item.card ? "is-card" : ""}" id="sc-item">${itemVisual(item)}<span class="showcase__shine"></span></div>
+        <div class="showcase__floor"></div>
+      </div>
+      <span class="prize__rarity showcase__rarity">${R.label}</span>
+      <h3 class="showcase__name">${item.name}</h3>
+      <div class="showcase__tags">${tags.map((t, i) => `<span style="--i:${i}">${t}</span>`).join("")}</div>
+      <p class="showcase__meta">Order ${order} · Ships in 2–3 weeks</p>
+      <div class="showcase__actions">
+        <button class="btn btn--primary btn--block" id="sc-keep">Add to my collection</button>
+        <div class="showcase__row">
+          <button class="btn showcase__ghost" id="sc-again">Buy another · $${box.usd}</button>
+          ${item.productId ? `<button class="btn showcase__ghost" id="sc-view">View item</button>` : ""}
+        </div>
+      </div>
+    </div>`;
+  wireTilt($("#sc-stage"), $("#sc-item"));
+
+  const keep = () => {
+    if (!state.redeemed.some((o) => o.order === order)) {
+      state.redeemed.unshift({ productId: boxId, order, at: Date.now(), paid: box.usd, item: { productId: item.productId, name: item.name, img: item.img, card: item.card, rarity: item.rarity } });
+      save();
+    }
+  };
+  $("#sc-keep").addEventListener("click", () => {
+    buzz(12);
+    keep();
+    closeDrop({ keepLock: !detail.hidden });
+    setTimeout(() => toast(`${item.name} added to your collection`, "check", 2800), 300);
+  });
+  $("#sc-again").addEventListener("click", () => {
+    buzz();
+    keep();
+    closeDrop({ keepLock: !detail.hidden });
+    setTimeout(() => openPurchase(box), 380);
+  });
+  $("#sc-view")?.addEventListener("click", () => {
+    buzz();
+    keep();
+    closeDrop({ keepLock: true });
+    setTimeout(() => {
+      enteredFromStore = true;
+      location.hash = `#/p/${item.productId}`;
+    }, 300);
+  });
+}
+
+function wireTilt(stage, el) {
+  if (reducedMotion.matches) return;
+  let raf = null;
+  const set = (rx, ry) => {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      el.style.setProperty("--rx", `${rx}deg`);
+      el.style.setProperty("--ry", `${ry}deg`);
+      el.style.setProperty("--sx", `${50 + ry * 2.2}%`);
+    });
+  };
+  stage.addEventListener("pointermove", (e) => {
+    const r = stage.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    el.classList.add("is-tilting");
+    set(-py * 22, px * 26);
+  });
+  const reset = () => {
+    el.classList.remove("is-tilting");
+    set(0, 0);
+  };
+  stage.addEventListener("pointerleave", reset);
+  stage.addEventListener("pointerup", reset);
+  stage.addEventListener("pointercancel", reset);
+}
+
+/* ---------- iPhone-style checkout ---------- */
+const coarse = matchMedia("(pointer: coarse)");
+function money(n) {
+  return `$${Number(n).toFixed(2)}`;
+}
+function faceIdSVG() {
+  return `<svg class="faceid" viewBox="0 0 64 64" aria-hidden="true">
+    <path class="faceid__frame" d="M4 20V12a8 8 0 0 1 8-8h8M44 4h8a8 8 0 0 1 8 8v8M60 44v8a8 8 0 0 1-8 8h-8M20 60h-8a8 8 0 0 1-8-8v-8" />
+    <path class="faceid__face" d="M22 24v4M42 24v4M32 24v12h-3M24 44c4 4 12 4 16 0" />
+    <circle class="faceid__ok" cx="32" cy="32" r="26" />
+    <path class="faceid__check" d="M21 33l7 7 15-16" />
+  </svg>`;
+}
+function openPurchase(p) {
+  if ($(".paysheet")) return;
+  const order = `HRB-${Math.floor(100000 + Math.random() * 900000)}`;
+  const el = document.createElement("div");
+  el.className = "paysheet";
+  el.innerHTML = `
+    <div class="paysheet__scrim"></div>
+    <div class="paysheet__panel" role="dialog" aria-modal="true" aria-label="Confirm purchase">
+      <header class="paysheet__head">
+        <span class="paysheet__brand">${icon("wallet")}<b>Pay</b></span>
+        <button class="paysheet__x" aria-label="Cancel">${icon("x")}</button>
+      </header>
+      <div class="paysheet__group">
+        <div class="paysheet__row"><span class="paysheet__card"><i>${icon("unity")}</i></span><div><b>Hard Rock Bet Card</b><small>•••• 4242</small></div>${icon("chevron-right")}</div>
+        <div class="paysheet__row"><span class="paysheet__label">Ship to</span><div><b>Demo Customer</b><small>Home address on file</small></div>${icon("chevron-right")}</div>
+        <div class="paysheet__row"><span class="paysheet__label">Contact</span><div><b>Demo account</b><small>Email on file</small></div>${icon("chevron-right")}</div>
+      </div>
+      <div class="paysheet__group">
+        <div class="paysheet__row paysheet__item"><span class="paysheet__thumb"><img src="${p.img}" alt="" /></span><div><b>${p.name}</b><small>Hard Rock Bet Rewards</small></div><span>${money(p.usd)}</span></div>
+        <div class="paysheet__row paysheet__line"><span>Shipping</span><span>Free</span></div>
+        <div class="paysheet__row paysheet__total"><span>Pay Hard Rock Bet</span><span>${money(p.usd)}</span></div>
+      </div>
+      <div class="paysheet__confirm" id="pay-confirm">
+        ${
+          coarse.matches
+            ? `<div class="paysheet__side">${faceIdSVG()}<span class="paysheet__status">Double-tap to Pay</span></div>`
+            : `<div class="paysheet__side">${faceIdSVG()}<span class="paysheet__status">Confirm with Face ID</span></div><button class="paysheet__pay" id="pay-btn">Pay ${money(p.usd)}</button>`
+        }
+      </div>
+      <p class="paysheet__demo">Demo checkout · you won't be charged</p>
+    </div>
+    ${coarse.matches ? `<span class="paysheet__sidebtn" aria-hidden="true"><span>Double-tap<br/>to Pay</span></span>` : ""}`;
+  document.body.append(el);
+  document.body.classList.add("is-locked");
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("is-open")));
+  buzz(8);
+
+  let busy = false;
+  const close = (keepLock = false) => {
+    el.classList.remove("is-open");
+    setTimeout(() => {
+      el.remove();
+      if (!keepLock && detail.hidden && drop.hidden) document.body.classList.remove("is-locked");
+    }, 380);
+  };
+  $(".paysheet__x", el).addEventListener("click", () => !busy && close());
+  $(".paysheet__scrim", el).addEventListener("click", () => !busy && close());
+
+  const status = $(".paysheet__status", el);
+  const pay = async () => {
+    if (busy) return;
+    busy = true;
+    el.classList.add("is-auth");
+    status.textContent = "Face ID";
+    buzz(10);
+    await wait(1000);
+    el.classList.add("is-processing");
+    status.textContent = "Processing";
+    await wait(700);
+    el.classList.add("is-done");
+    status.textContent = "Done";
+    buzz([15, 40, 25]);
+    await wait(900);
+    close(true);
+    await wait(420);
+    openDrop({ boxId: p.id, source: "buy", order });
+  };
+  $("#pay-btn", el)?.addEventListener("click", pay);
+  if (coarse.matches) {
+    let last = 0;
+    $("#pay-confirm", el).addEventListener("click", () => {
+      const now = Date.now();
+      if (now - last < 450) pay();
+      else {
+        last = now;
+        el.classList.remove("is-nudge");
+        void el.offsetWidth;
+        el.classList.add("is-nudge");
+        buzz(5);
+      }
+    });
+    $(".paysheet__sidebtn", el)?.addEventListener("click", pay);
   }
 }
 
@@ -1026,13 +1246,20 @@ grid.addEventListener("click", (e) => {
   location.hash = `#/p/${card.dataset.id}`;
 });
 
-function redeemButtonHTML(p) {
+function redeemButtonHTML(p, secondary = false) {
   const owned = state.redeemed.some((o) => o.productId === p.id);
-  if (state.points < p.price) return `<button class="btn btn--block btn--disabled" data-redeem>Not enough Online Unity Points</button>`;
-  return `<button class="btn btn--block btn--primary hold" data-redeem data-hold>
+  if (state.points < p.price)
+    return secondary
+      ? `<button class="btn btn--block btn--soft btn--muted" data-redeem>Redeem with points · ${fmt(p.price - state.points)} more needed</button>`
+      : `<button class="btn btn--block btn--disabled" data-redeem>Not enough Online Unity Points</button>`;
+  return `<button class="btn btn--block ${secondary ? "btn--soft" : "btn--primary"} hold" data-redeem data-hold>
     <span class="hold__fill"></span>
     <span class="hold__label">${owned ? "Redeem another" : "Hold to redeem"} · ${fmt(p.price)} pts</span>
   </button>`;
+}
+function ctaHTML(p) {
+  if (!p.usd) return redeemButtonHTML(p);
+  return `<button class="btn btn--block btn--buy" data-buy>Buy · ${money(p.usd)}</button>${redeemButtonHTML(p, true)}`;
 }
 
 function insideHTML(p) {
@@ -1051,8 +1278,15 @@ function insideHTML(p) {
       .join("")}</div>
     <div class="inside__row">${items
       .map((it, i) => {
+        const style = `style="--rc:${RARITY[it.rarity].color};--i:${i}"`;
+        if (it.card)
+          return `<div class="inside__item" ${style}>
+            <span class="inside__img is-card">${slabHTML(it.card, it.rarity, "slab--mini")}</span>
+            <small>${RARITY[it.rarity].label}</small>
+            <b>${it.name}</b>
+          </div>`;
         const ip = productById(it.productId);
-        return `<button class="inside__item" data-inside="${ip.id}" style="--rc:${RARITY[it.rarity].color};--i:${i}">
+        return `<button class="inside__item" data-inside="${ip.id}" ${style}>
           <span class="inside__img"><img src="${ip.img}" alt="" loading="lazy" /></span>
           <small>${RARITY[it.rarity].label}</small>
           <b>${it.name || ip.name}</b>
@@ -1084,8 +1318,8 @@ function detailHTML(p) {
           <section class="related" style="--i:5"><h3>You may also like</h3><div class="related__row">${related.map(cardHTML).join("")}</div></section>
         </div>
         <div class="buybar"><div class="buybar__inner">
-          <div class="buybar__row"><span>Cost</span><span class="price">${icon("unity")}<span>${fmt(p.price)}</span></span></div>
-          <div class="buybar__cta">${redeemButtonHTML(p)}</div>
+          <div class="buybar__row"><span>${p.usd ? "Price" : "Cost"}</span><span class="buybar__prices">${p.usd ? `<b>${money(p.usd)}</b><span class="price__or">or</span>` : ""}<span class="price">${icon("unity")}<span>${fmt(p.price)}</span></span></span></div>
+          <div class="buybar__cta">${ctaHTML(p)}</div>
         </div></div>
       </div>
     </div>`;
@@ -1228,20 +1462,20 @@ function redeem(btn) {
 }
 
 function successSheet(p, order, item) {
-  const shown = item || { name: p.name, img: p.img };
+  const shown = item || { name: p.name, img: p.img, rarity: "common" };
   openSheet(
     `<div class="success">
       <svg class="success__check" viewBox="0 0 52 52"><circle cx="26" cy="26" r="24" /><path d="M15 27l7 7 15-16" /></svg>
       <h2>${item ? "What a pull!" : "You got it!"}</h2>
       <p class="lead">${item ? `Your ${p.name} had a ${RARITY[item.rarity].label} ${BOXES[p.id].noun} inside. It's on its way.` : `${p.name} is on its way.`} We'll email your shipping details.</p>
-      <div class="success__item"${item ? ` style="--rc:${RARITY[item.rarity].color}"` : ""}><span><img src="${shown.img}" alt="" /></span><div><b>${shown.name}</b><small>Order ${order} · ${fmt(p.price)} pts</small></div></div>
+      <div class="success__item"${item ? ` style="--rc:${RARITY[item.rarity].color}"` : ""}><span class="${shown.card ? "is-card" : ""}">${itemVisual(shown, "slab--mini")}</span><div><b>${shown.name}</b><small>Order ${order} · ${fmt(p.price)} pts</small></div></div>
       <button class="btn btn--primary btn--block" id="view-redeemed">View in My Rewards</button>
       <button class="btn btn--ghost btn--block" data-close>Keep browsing</button>
     </div>`,
     () => {
       const cta = $(".buybar__cta", detail);
       if (cta && currentId === p.id) {
-        cta.innerHTML = redeemButtonHTML(p);
+        cta.innerHTML = ctaHTML(p);
         wireHold();
       }
     }
@@ -1388,6 +1622,11 @@ detail.addEventListener("click", async (e) => {
     } catch {}
     return;
   }
+  if (e.target.closest("[data-buy]")) {
+    buzz(8);
+    openPurchase(productById(currentId));
+    return;
+  }
   const redeemBtn = e.target.closest("[data-redeem]:not([data-hold])");
   if (redeemBtn) {
     const p = productById(currentId);
@@ -1461,7 +1700,8 @@ addEventListener("keydown", (e) => {
   const lb = $(".lightbox");
   if (lb) $(".lightbox__close", lb).click();
   else if (!sheet.hidden) closeSheet();
-  else if (!drop.hidden && !drop.classList.contains("is-levelup") && dropCtx?.source !== "redeem") closeDrop();
+  else if ($(".paysheet")) $(".paysheet__x").click();
+  else if (!drop.hidden && !drop.classList.contains("is-levelup") && dropCtx?.source === "drop") closeDrop();
   else if (!detail.hidden) goBack();
 });
 
